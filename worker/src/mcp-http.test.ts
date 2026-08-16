@@ -52,9 +52,14 @@ describe('handleMcpHttpRequest GET', () => {
     expect(body.version).toBe('1.37.0');
     expect(body.protocolVersion).toBe('2024-11-05');
     expect(body.tools_count).toBe(MCP_TOOLS_COUNT);
-    expect(typeof body.full_tool_set).toBe('string');
-    expect(body.full_tool_set).toContain('@tensorfeed/mcp-server');
-    expect(body.full_tool_set).toContain('24');
+    // full_tool_set was replaced by related_surface: the old copy called this
+    // endpoint "a curated subset" of the stdio server's 24 tools, which was
+    // wrong in both directions (the sets overlap on two tools, and this one is
+    // larger). Agents route on this text, so it has to be accurate.
+    expect(typeof body.related_surface).toBe('string');
+    expect(body.related_surface).toContain('@tensorfeed/mcp-server');
+    expect(body.related_surface).toContain('24');
+    expect(typeof body.superseded_tools).toBe('string');
   });
 });
 
@@ -813,5 +818,143 @@ describe('premium relay credential hygiene', () => {
       const rest = t.premium?.restPath ?? '';
       expect(rest).not.toMatch(/\/api\/payment\/(trial-credits|buy-credits|confirm|revoke)/);
     }
+  });
+});
+
+describe('tool consolidation (listed vs callable)', () => {
+  const SUPERSEDED = [
+    'query_fda_drug_events',
+    'query_fda_drug_labels',
+    'query_fda_drug_recalls',
+    'query_fda_food_recalls',
+    'query_fda_device_events',
+    'get_arxiv_recent',
+    'get_ai_trending_papers',
+    'get_hf_daily_papers',
+  ];
+
+  async function toolsList(): Promise<Array<{ name: string; description: string; inputSchema: Record<string, unknown> }>> {
+    const res = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', {
+        method: 'POST',
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+      }),
+      {} as Env,
+    );
+    const json = (await res.json()) as { result: { tools: Array<{ name: string; description: string; inputSchema: Record<string, unknown> }> } };
+    return json.result.tools;
+  }
+
+  it('hides every superseded tool from tools/list', async () => {
+    const names = (await toolsList()).map((t) => t.name);
+    for (const s of SUPERSEDED) {
+      expect(names).not.toContain(s);
+    }
+  });
+
+  it('lists the two consolidated tools that replace them', async () => {
+    const names = (await toolsList()).map((t) => t.name);
+    expect(names).toContain('query_fda');
+    expect(names).toContain('get_research_papers');
+  });
+
+  it('shrinks the advertised catalog, which is the whole point', async () => {
+    const tools = await toolsList();
+    // 33 before: 8 superseded removed, 2 consolidated added.
+    expect(tools).toHaveLength(27);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(tools.length);
+  });
+
+  it('requires the discriminator argument on each consolidated tool', async () => {
+    const tools = await toolsList();
+    const fda = tools.find((t) => t.name === 'query_fda');
+    const papers = tools.find((t) => t.name === 'get_research_papers');
+    expect((fda!.inputSchema as { required?: string[] }).required).toEqual(['dataset']);
+    expect((papers!.inputSchema as { required?: string[] }).required).toEqual(['source']);
+  });
+
+  it('enumerates every dataset and source so the agent never has to guess', async () => {
+    const tools = await toolsList();
+    const props = (t: string) =>
+      (tools.find((x) => x.name === t)!.inputSchema as { properties: Record<string, { enum?: string[] }> }).properties;
+    expect(props('query_fda').dataset.enum).toEqual([
+      'drug_events', 'drug_labels', 'drug_recalls', 'food_recalls', 'device_events',
+    ]);
+    expect(props('get_research_papers').source.enum).toEqual(['arxiv_recent', 'trending', 'hf_daily']);
+  });
+
+  it('keeps every superseded name dispatchable, so no existing agent breaks', () => {
+    // Dispatch resolves against the full TOOLS array, not the listed subset.
+    // Asserted structurally rather than by calling each one, since a real call
+    // would reach upstream and this invariant is about resolution, not I/O.
+    for (const s of SUPERSEDED) {
+      const tool = MCP_HTTP_TOOLS.find((t) => t.name === s);
+      expect(tool, `${s} must stay callable`).toBeDefined();
+      expect(tool!.listed).toBe(false);
+      expect(typeof tool!.handler).toBe('function');
+    }
+  });
+
+  it('advertises exactly the tools that are not superseded', () => {
+    const listed = MCP_HTTP_TOOLS.filter((t) => t.listed !== false).map((t) => t.name);
+    expect(listed).toHaveLength(MCP_HTTP_TOOLS.length - SUPERSEDED.length);
+    for (const s of SUPERSEDED) expect(listed).not.toContain(s);
+  });
+
+  it('still reports a genuinely unknown tool as unknown', async () => {
+    const res = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', {
+        method: 'POST',
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'query_fda_not_a_thing', arguments: {} } }),
+      }),
+      {} as Env,
+    );
+    const json = (await res.json()) as { error?: { message?: string } };
+    expect(json.error?.message).toContain('unknown tool');
+  });
+
+  it('rejects a bad discriminator with a hint instead of a crash', async () => {
+    const res = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', {
+        method: 'POST',
+        body: JSON.stringify({
+          jsonrpc: '2.0', id: 1, method: 'tools/call',
+          params: { name: 'query_fda', arguments: { dataset: '__proto__' } },
+        }),
+      }),
+      {} as Env,
+    );
+    const json = (await res.json()) as { result?: { content?: Array<{ text?: string }> } };
+    const text = json.result?.content?.[0]?.text ?? '';
+    expect(text).toContain('unknown_dataset');
+  });
+
+  it('rejects a missing discriminator with a hint', async () => {
+    const res = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', {
+        method: 'POST',
+        body: JSON.stringify({
+          jsonrpc: '2.0', id: 1, method: 'tools/call',
+          params: { name: 'get_research_papers', arguments: {} },
+        }),
+      }),
+      {} as Env,
+    );
+    const json = (await res.json()) as { result?: { content?: Array<{ text?: string }> } };
+    const text = json.result?.content?.[0]?.text ?? '';
+    expect(text).toContain('source_required');
+  });
+
+  it('no longer claims on GET that it serves a subset of the stdio tool set', async () => {
+    const res = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', { method: 'GET' }),
+      {} as Env,
+    );
+    const body = (await res.json()) as { tools_count: number; related_surface: string; full_tool_set?: string };
+    // The old copy said the hosted endpoint was a curated subset of 24. It is
+    // neither a subset nor smaller; the two surfaces share only two tools.
+    expect(body.full_tool_set).toBeUndefined();
+    expect(body.related_surface).toContain('different 24-tool set');
+    expect(body.tools_count).toBe(27);
   });
 });

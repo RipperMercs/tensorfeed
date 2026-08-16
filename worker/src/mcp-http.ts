@@ -141,6 +141,12 @@ interface McpToolDef {
     paymentTier: 1 | 2 | 3 | 4 | 5;
     buildParams: (args: Record<string, unknown>) => URLSearchParams;
   };
+  // false hides the tool from tools/list while leaving it fully callable by
+  // name. Used for superseded tools that a consolidated one now covers: the
+  // selection surface shrinks without breaking any agent holding the old name.
+  // The constraint on this server is tool SELECTION, so a 33-entry catalog is
+  // itself the problem; deleting outright would break callers, so we do neither.
+  listed?: boolean;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -204,6 +210,83 @@ const ROUTING_NEXT = {
   no_token_path:
     'sign a wallet message at https://tensorfeed.ai/api/payment/trial-credits for 25 free credits, no USDC required',
 } as const;
+
+// Public dataset argument -> internal openFDA category path. The enum values are
+// snake_case because that is what reads naturally as a tool argument; the
+// internal categories keep their slash form (see FDA_CATEGORIES in health-fda).
+const FDA_DATASET_CATEGORY: Record<string, string> = {
+  drug_events: 'drug/events',
+  drug_labels: 'drug/labels',
+  drug_recalls: 'drug/recalls',
+  food_recalls: 'food/recalls',
+  device_events: 'device/events',
+};
+
+// Own-property lookup, never `map[key]` directly. A bare index hits the
+// prototype chain, so dataset="__proto__" resolves to Object.prototype, sails
+// past a truthiness guard, and reaches the query builder as a non-string. This
+// is the same trap isFDACategory documents in health-fda.ts.
+function lookupOwn<T>(map: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
+}
+
+// Shared openFDA query path. The five per-dataset tools and the consolidated
+// query_fda all funnel through this, so validation and paging behave identically
+// no matter which name the agent called.
+async function runFdaQuery(
+  env: Env,
+  category: string,
+  args: Record<string, unknown>,
+): Promise<unknown> {
+  const url = new URL(`https://tensorfeed.ai/api/health/fda/${category}`);
+  const search = getStringArg(args, 'search');
+  const sort = getStringArg(args, 'sort');
+  const limit = getNumberArg(args, 'limit');
+  const skip = getNumberArg(args, 'skip');
+  if (search !== null) url.searchParams.set('search', search);
+  if (sort !== null) url.searchParams.set('sort', sort);
+  if (limit !== null) url.searchParams.set('limit', String(limit));
+  if (skip !== null) url.searchParams.set('skip', String(skip));
+  const parsed = parseFDAQuery(category, url);
+  if (!parsed.ok) return { ok: false, error: parsed.error, hint: parsed.hint };
+  return await fetchFDAQuery(env, parsed.query);
+}
+
+// The three paper feeds, keyed by the public source argument. Each differs only
+// in which snapshot it reads, its cap, its default, and its unavailable code.
+interface PaperSourceSpec {
+  load: (env: Env) => Promise<unknown>;
+  max: number;
+  fallback: number;
+  unavailable: string;
+}
+
+const PAPER_SOURCES: Record<string, PaperSourceSpec> = {
+  arxiv_recent: { load: getArxivLatest, max: 50, fallback: 25, unavailable: 'arxiv_unavailable' },
+  trending: { load: getPapersLatest, max: 30, fallback: 15, unavailable: 'papers_unavailable' },
+  hf_daily: { load: getHFDailyPapersLatest, max: 50, fallback: 20, unavailable: 'hf_daily_papers_unavailable' },
+};
+
+// Shared paper-feed read, so the consolidated tool and the three superseded ones
+// return byte-identical shapes and cannot drift apart.
+async function runPaperQuery(
+  env: Env,
+  spec: PaperSourceSpec,
+  args: Record<string, unknown>,
+): Promise<unknown> {
+  const limit = Math.max(1, Math.min(spec.max, getNumberArg(args, 'limit') ?? spec.fallback));
+  const snap = await spec.load(env);
+  if (!snap) return { ok: false, error: spec.unavailable };
+  const papers = Array.isArray((snap as { papers?: unknown[] }).papers)
+    ? ((snap as { papers: unknown[] }).papers as unknown[])
+    : [];
+  return {
+    ok: true,
+    snapshot_date: (snap as { capturedAt?: string }).capturedAt ?? null,
+    count: Math.min(papers.length, limit),
+    papers: papers.slice(0, limit),
+  };
+}
 
 const TOOLS: McpToolDef[] = [
   // ─── News + AI ecosystem ──────────────────────────────────────────
@@ -793,9 +876,46 @@ const TOOLS: McpToolDef[] = [
   },
   // ─── FDA regulatory + safety (life-sciences focus) ────────────────
   {
-    name: 'query_fda_drug_events',
+    // One tool over all five openFDA datasets. The five per-dataset tools below
+    // are byte-identical apart from the category string, so they cost five slots
+    // in the agent's selection list to buy nothing. They remain callable.
+    name: 'query_fda',
     description:
-      'Query the FDA FAERS adverse event reports database. Returns drug-event records with patient demographics, drug names, reaction terms (MedDRA-coded), outcomes, and seriousness flags. Uses openFDA Lucene-style search syntax (e.g. "patient.drug.medicinalproduct:aspirin"). License: openFDA CC0 1.0 Universal Dedication, FDA waiver of all copyright; commercial redistribution permitted.',
+      'Query any openFDA dataset: drug adverse events (FAERS), drug labeling (SPL), drug recalls, food recalls, or medical device events. Pick the dataset with the dataset argument. Uses openFDA Lucene-style search syntax (e.g. "patient.drug.medicinalproduct:aspirin", "openfda.brand_name:tylenol"). License: openFDA CC0 1.0 Universal Dedication, FDA waiver of all copyright; commercial redistribution permitted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        dataset: {
+          type: 'string',
+          enum: ['drug_events', 'drug_labels', 'drug_recalls', 'food_recalls', 'device_events'],
+          description:
+            'Which openFDA dataset to query. drug_events = FAERS adverse event reports. drug_labels = structured product labeling (indications, dosage, warnings, contraindications, pharmacology). drug_recalls / food_recalls = enforcement records with Class I/II/III classification, reason, and distribution. device_events = MAUDE device adverse events.',
+        },
+        search: { type: 'string', description: 'openFDA Lucene-style search expression. Examples: patient.drug.medicinalproduct:aspirin, openfda.brand_name:tylenol, patient.reaction.reactionmeddrapt:headache+AND+receivedate:[20240101+TO+20251231]' },
+        limit: { type: 'number', description: 'Max records to return (1-100)', default: 10 },
+        skip: { type: 'number', description: 'Pagination offset (0-25000)', default: 0 },
+        sort: { type: 'string', description: 'Sort by field (e.g. receivedate:desc)' },
+      },
+      required: ['dataset'],
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const dataset = getStringArg(args, 'dataset');
+      if (dataset === null) {
+        return { ok: false, error: 'dataset_required', hint: `dataset must be one of: ${Object.keys(FDA_DATASET_CATEGORY).join(', ')}` };
+      }
+      const category = lookupOwn(FDA_DATASET_CATEGORY, dataset);
+      if (!category) {
+        return { ok: false, error: 'unknown_dataset', hint: `dataset must be one of: ${Object.keys(FDA_DATASET_CATEGORY).join(', ')}` };
+      }
+      return runFdaQuery(env, category, args);
+    },
+  },
+  {
+    name: 'query_fda_drug_events',
+    listed: false,
+    description:
+      'Superseded by query_fda with dataset="drug_events"; still callable. Query the FDA FAERS adverse event reports database. Returns drug-event records with patient demographics, drug names, reaction terms (MedDRA-coded), outcomes, and seriousness flags. Uses openFDA Lucene-style search syntax (e.g. "patient.drug.medicinalproduct:aspirin"). License: openFDA CC0 1.0 Universal Dedication, FDA waiver of all copyright; commercial redistribution permitted.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -823,8 +943,9 @@ const TOOLS: McpToolDef[] = [
   },
   {
     name: 'query_fda_drug_labels',
+    listed: false,
     description:
-      'Query the FDA structured product labeling (SPL) database for prescription and OTC drugs. Returns indications, dosage, warnings, contraindications, adverse reactions, and pharmacology sections. License: openFDA CC0 1.0; commercial redistribution permitted.',
+      'Superseded by query_fda with dataset="drug_labels"; still callable. Query the FDA structured product labeling (SPL) database for prescription and OTC drugs. Returns indications, dosage, warnings, contraindications, adverse reactions, and pharmacology sections. License: openFDA CC0 1.0; commercial redistribution permitted.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -852,8 +973,9 @@ const TOOLS: McpToolDef[] = [
   },
   {
     name: 'query_fda_drug_recalls',
+    listed: false,
     description:
-      'Query the FDA drug enforcement (recall) database. Returns recall classification (Class I/II/III), reason, distribution, product description, and voluntary/mandatory flag. License: openFDA CC0 1.0; commercial redistribution permitted.',
+      'Superseded by query_fda with dataset="drug_recalls"; still callable. Query the FDA drug enforcement (recall) database. Returns recall classification (Class I/II/III), reason, distribution, product description, and voluntary/mandatory flag. License: openFDA CC0 1.0; commercial redistribution permitted.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -881,8 +1003,9 @@ const TOOLS: McpToolDef[] = [
   },
   {
     name: 'query_fda_food_recalls',
+    listed: false,
     description:
-      'Query the FDA food enforcement (recall) database covering food products distributed in the US. Same shape as drug recalls. License: openFDA CC0 1.0; commercial redistribution permitted.',
+      'Superseded by query_fda with dataset="food_recalls"; still callable. Query the FDA food enforcement (recall) database covering food products distributed in the US. Same shape as drug recalls. License: openFDA CC0 1.0; commercial redistribution permitted.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -910,8 +1033,9 @@ const TOOLS: McpToolDef[] = [
   },
   {
     name: 'query_fda_device_events',
+    listed: false,
     description:
-      'Query the FDA MAUDE medical device adverse event reports database. Returns device identifiers, problem codes, event narratives, patient outcomes. Useful for safety signal detection on FDA-cleared devices. License: openFDA CC0 1.0; commercial redistribution permitted.',
+      'Superseded by query_fda with dataset="device_events"; still callable. Query the FDA MAUDE medical device adverse event reports database. Returns device identifiers, problem codes, event narratives, patient outcomes. Useful for safety signal detection on FDA-cleared devices. License: openFDA CC0 1.0; commercial redistribution permitted.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -977,9 +1101,46 @@ const TOOLS: McpToolDef[] = [
 
   // ─── AI Research: arXiv recent submissions ─────────────────────────
   {
-    name: 'get_arxiv_recent',
+    // One tool over the three paper feeds. They differ only in which snapshot
+    // they read and their limit bounds, so three slots in the selection list
+    // bought nothing but a harder choice. All three remain callable by name.
+    name: 'get_research_papers',
     description:
-      "Get the 50 most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV, sorted by submission date. Each entry carries arxivId (no version suffix), version, title, abstract, authors, primary category, all categories, publishedAt, updatedAt, htmlUrl, pdfUrl, and doi. Refreshed daily at 11:30 UTC. The firehose pair to get_ai_trending_papers (which ranks by citation count). License: arXiv permits use of metadata; the standard attribution block ships on every response.",
+      'Get recent AI/ML research papers from one of three feeds, chosen with the source argument. arxiv_recent is the firehose: newest arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV by submission date, refreshed daily at 11:30 UTC. trending is citation-ranked from Semantic Scholar across five fan-out queries, deduped, refreshed daily at 11:00 UTC. hf_daily is Hugging Face editor-curated with community upvotes and discussion counts, refreshed daily at 14:15 UTC. Pick arxiv_recent for what is brand new, trending for what is influential, hf_daily for what practitioners are discussing. License: arXiv and Semantic Scholar permit metadata use; the standard attribution block ships on every response.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        source: {
+          type: 'string',
+          enum: ['arxiv_recent', 'trending', 'hf_daily'],
+          description:
+            'Which feed to read. arxiv_recent = newest submissions (max 50). trending = citation-ranked (max 30). hf_daily = editor-curated with upvotes (max 50).',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max papers to return. Capped per source: arxiv_recent 50, trending 30, hf_daily 50.',
+        },
+      },
+      required: ['source'],
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const source = getStringArg(args, 'source');
+      if (source === null) {
+        return { ok: false, error: 'source_required', hint: `source must be one of: ${Object.keys(PAPER_SOURCES).join(', ')}` };
+      }
+      const spec = lookupOwn(PAPER_SOURCES, source);
+      if (!spec) {
+        return { ok: false, error: 'unknown_source', hint: `source must be one of: ${Object.keys(PAPER_SOURCES).join(', ')}` };
+      }
+      return runPaperQuery(env, spec, args);
+    },
+  },
+  {
+    name: 'get_arxiv_recent',
+    listed: false,
+    description:
+      "Superseded by get_research_papers with source=\"arxiv_recent\"; still callable. Get the 50 most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV, sorted by submission date. Each entry carries arxivId (no version suffix), version, title, abstract, authors, primary category, all categories, publishedAt, updatedAt, htmlUrl, pdfUrl, and doi. Refreshed daily at 11:30 UTC. The firehose pair to get_ai_trending_papers (which ranks by citation count). License: arXiv permits use of metadata; the standard attribution block ships on every response.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -1010,8 +1171,9 @@ const TOOLS: McpToolDef[] = [
   // ─── AI Research: AI trending papers (Semantic Scholar) ────────────
   {
     name: 'get_ai_trending_papers',
+    listed: false,
     description:
-      "Get the daily curated AI/ML trending papers from Semantic Scholar, ranked by citation count. Five fan-out queries (large language model, transformer, RLHF, AI agents, diffusion model), deduped by paperId, top 30 returned. Each entry carries paperId, title, abstract, authors, year, venue, citationCount, arxivId, doi, and fieldsOfStudy. Refreshed daily at 11:00 UTC. Citation-ranked counterpart to get_arxiv_recent (firehose by submission date). License: Semantic Scholar API permits use; the standard attribution block ships on every response.",
+      "Superseded by get_research_papers with source=\"trending\"; still callable. Get the daily curated AI/ML trending papers from Semantic Scholar, ranked by citation count. Five fan-out queries (large language model, transformer, RLHF, AI agents, diffusion model), deduped by paperId, top 30 returned. Each entry carries paperId, title, abstract, authors, year, venue, citationCount, arxivId, doi, and fieldsOfStudy. Refreshed daily at 11:00 UTC. Citation-ranked counterpart to get_arxiv_recent (firehose by submission date). License: Semantic Scholar API permits use; the standard attribution block ships on every response.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -1042,8 +1204,9 @@ const TOOLS: McpToolDef[] = [
   // ─── AI Research: Hugging Face daily papers ────────────────────────
   {
     name: 'get_hf_daily_papers',
+    listed: false,
     description:
-      "Get Hugging Face's editor-curated daily AI/ML papers feed with community upvotes and discussion counts. Each entry carries paperId, title (sanitized), summary, authors, publishedAt, submittedAt, upvotes, num_comments, thumbnail, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Different signal from get_arxiv_recent (firehose) and get_ai_trending_papers (citation-ranked). Refreshed daily at 14:15 UTC.",
+      "Superseded by get_research_papers with source=\"hf_daily\"; still callable. Get Hugging Face's editor-curated daily AI/ML papers feed with community upvotes and discussion counts. Each entry carries paperId, title (sanitized), summary, authors, publishedAt, submittedAt, upvotes, num_comments, thumbnail, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Different signal from get_arxiv_recent (firehose) and get_ai_trending_papers (citation-ranked). Refreshed daily at 14:15 UTC.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -1324,8 +1487,12 @@ const INITIALIZE_RESULT = {
     'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
 } as const;
 
+// Only listed tools are advertised. Superseded ones stay in TOOLS so
+// handleToolCall still resolves them by name.
+export const LISTED_TOOLS = TOOLS.filter((t) => t.listed !== false);
+
 const TOOLS_LIST_RESULT = {
-  tools: TOOLS.map((t) => ({
+  tools: LISTED_TOOLS.map((t) => ({
     name: t.name,
     description: t.description,
     inputSchema: t.inputSchema,
@@ -1341,14 +1508,21 @@ const GET_DISCOVERY_BODY = JSON.stringify({
   contentType: 'application/json',
   body: 'JSON-RPC 2.0 envelope per MCP spec',
   spec: 'https://modelcontextprotocol.io/specification/2024-11-05/basic/transports',
-  tools_count: TOOLS.length,
+  tools_count: LISTED_TOOLS.length,
   payment: {
     premium_tools: ['route_verdict', 'whats_new'],
     x402: 'Pay per call in USDC. Send the base64 payment payload in arguments.payment or as an X-PAYMENT (or PAYMENT-SIGNATURE) header. Unpaid premium calls return canonical x402 requirements. Strict HTTP-402 transport for x402 client wrappers: POST https://mcp.tensorfeed.ai/mcp?x402=strict',
     credits: 'Authorization: Bearer tf_live_... credits token. Free trial credits at https://tensorfeed.ai/api/payment/trial-credits',
   },
-  full_tool_set:
-    'The npx stdio server @tensorfeed/mcp-server exposes the full 24-tool set; this hosted HTTP endpoint serves a curated subset.',
+  // This used to claim the hosted endpoint served "a curated subset" of the
+  // stdio server's 24 tools. It is not a subset: the two surfaces are almost
+  // disjoint, sharing only route_verdict and whats_new, and this one is the
+  // larger of the two. Describing them accurately matters because agents route
+  // on it.
+  related_surface:
+    'The npx stdio server @tensorfeed/mcp-server exposes a different 24-tool set built around signed verdicts and decision history (route_verdict, provider_reliability_verdict, failover_verdict, ssvc_verdict, pricing_series, watches). The two surfaces overlap only on route_verdict and whats_new. Install it with: npx -y @tensorfeed/mcp-server',
+  superseded_tools:
+    'Some tool names are answered but no longer listed, because a consolidated tool now covers them: query_fda replaces the five query_fda_* tools, and get_research_papers replaces get_arxiv_recent, get_ai_trending_papers, and get_hf_daily_papers. The old names keep working.',
 });
 
 // ── Method handlers ─────────────────────────────────────────────────
@@ -1825,5 +1999,9 @@ function paymentRequiredHttpResponse(
   });
 }
 
-export const MCP_TOOLS_COUNT = TOOLS.length;
+// The advertised count, which is what tools/list returns and what the GET
+// discovery body reports. Superseded-but-callable tools are excluded, because
+// the number an agent should see is the size of the choice it has to make.
+export const MCP_TOOLS_COUNT = LISTED_TOOLS.length;
+// Every tool including the superseded ones, for dispatch-level assertions.
 export { TOOLS as MCP_HTTP_TOOLS };
