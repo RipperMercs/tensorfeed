@@ -16100,6 +16100,26 @@ export default {
       return jsonResponse({ ok: true, ...result }, 200, 0);
     }
 
+    // What the hosted MCP endpoint's traffic actually is, by JSON-RPC method.
+    // /api/mcp/activity only ever showed tools/call, which made the endpoint
+    // look nearly idle (9 calls) on a day it served ~13,700 requests. This is
+    // the view that says whether the rest is agents connecting and bouncing or
+    // scanners walking the discovery surface. ?window=today|7d|30d
+    if (path === '/api/admin/mcp-methods' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      const w = url.searchParams.get('window') || 'today';
+      const days = w === '30d' ? 30 : w === '7d' ? 7 : 1;
+      const { buildMcpMethodBreakdown } = await import('./mcp-activity');
+      const report = await buildMcpMethodBreakdown(env, days);
+      if (!report) {
+        return jsonResponse(
+          { ok: false, error: 'analytics_unavailable', hint: 'CF_ANALYTICS_TOKEN / CF_ACCOUNT_ID must be set, and the AE SQL API must be reachable.' },
+          503,
+          0,
+        );
+      }
+      return jsonResponse({ ok: true, ...report }, 200, 0);
+    }
+
     if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const events = await getAnomalyEvents(env);
       const severityFilter = url.searchParams.get('severity');

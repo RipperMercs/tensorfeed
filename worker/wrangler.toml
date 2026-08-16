@@ -460,6 +460,17 @@ dataset = "tf_honeypot_hits"
 binding = "MCP_TOOL_CALLS_AE"
 dataset = "tf_mcp_tool_calls"
 
+# tf_mcp_methods: one datapoint per hosted-MCP request, keyed by JSON-RPC method
+# (plus GET for the discovery probe). tf_mcp_tool_calls only records tools/call,
+# which left the gap that mattered: /api/mcp took ~13,700 requests in a day while
+# logging 9 tool calls, and nothing said what the other 99.9% were. This answers
+# whether that volume is agents connecting and bouncing (a conversion problem) or
+# scanners walking the endpoint (noise to cap). Separate dataset so the existing
+# per-tool aggregation in /api/mcp/activity stays exactly as it is.
+[[analytics_engine_datasets]]
+binding = "MCP_METHOD_AE"
+dataset = "tf_mcp_methods"
+
 # tf_usage: agent-usage-meter full-funnel telemetry. One datapoint per
 # premium / tracked-free API response (free hits, 402 probes, paid calls).
 # AE writes are unmetered against the KV budget, so the high-volume funnel

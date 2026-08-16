@@ -103,6 +103,53 @@ export async function recordHostedToolCall(
   }
 }
 
+// The JSON-RPC methods the hosted endpoint answers, plus GET for the discovery
+// probe. Anything else collapses to 'other' so a scanner throwing junk method
+// names cannot blow up the index cardinality on a sampled dataset.
+// parse_error and invalid_request are kept distinct rather than folded into
+// 'other' because a flood of them is the clearest scanner signature there is:
+// a real MCP client never sends malformed JSON-RPC.
+const KNOWN_MCP_METHODS = new Set([
+  'GET', 'initialize', 'notifications/initialized', 'ping', 'tools/list', 'tools/call',
+  'parse_error', 'invalid_request',
+]);
+
+export function normalizeMcpMethod(method: string): string {
+  return KNOWN_MCP_METHODS.has(method) ? method : 'other';
+}
+
+/**
+ * Record one hosted-MCP request by JSON-RPC method.
+ *
+ * recordHostedToolCall above only fires on tools/call, which is why the endpoint
+ * could log ~13,700 requests in a day against 9 tool calls with nothing
+ * explaining the gap. This closes it: every request lands here with its method
+ * and UA family, so the split between real agents connecting (initialize +
+ * tools/list then leaving) and scanners hammering the discovery surface becomes
+ * a number instead of a guess.
+ *
+ * Best-effort and non-blocking, same contract as the sibling recorders: never
+ * throws, no-ops when the binding is absent.
+ */
+export function recordMcpMethod(env: Env, method: string, uaFamily: string): void {
+  if (!env.MCP_METHOD_AE) return;
+  try {
+    const m = normalizeMcpMethod(method);
+    env.MCP_METHOD_AE.writeDataPoint({
+      // index1 is the sampling key. Method is deliberately low-cardinality.
+      indexes: [m],
+      blobs: [
+        m,
+        (uaFamily || 'unknown').slice(0, 64),
+        new Date().toISOString().slice(0, 10),
+      ],
+      doubles: [Date.now()],
+    });
+  } catch {
+    // Best-effort telemetry; never break the calling request path.
+  }
+}
+
 interface NpmPointResponse {
   downloads?: number;
   start?: string;
@@ -280,6 +327,119 @@ async function buildHostedFromAE(env: Env, today: string): Promise<MCPActivitySn
   // reverse. All-or-nothing keeps the snapshot internally honest.
   if (toolRows === null || dayRows === null) return null;
   return aggregateHostedFromAeRows(toolRows, dayRows, today);
+}
+
+// ── Hosted-MCP method breakdown ─────────────────────────────────────
+//
+// What the ~13,700 daily /api/mcp requests actually are. tf_mcp_tool_calls only
+// ever recorded tools/call (9 on the day that endpoint took 13,741 requests), so
+// the shape of the other 99.9% was unknown. These read tf_mcp_methods.
+
+export interface McpMethodBreakdown {
+  window_days: number;
+  total_requests: number;
+  by_method: Array<{ method: string; requests: number; share: number }>;
+  by_ua: Array<{ ua: string; requests: number; tools_call: number; distinct_methods: number }>;
+  handshake: {
+    initialize: number;
+    tools_list: number;
+    tools_call: number;
+    // tools/call divided by initialize. Well under 1 means clients are
+    // connecting, reading the catalog, and leaving without invoking anything,
+    // which is a tool-selection problem rather than a traffic problem.
+    calls_per_initialize: number;
+    // Requests that never even reached a valid JSON-RPC method.
+    malformed: number;
+  };
+  note: string;
+}
+
+// Pure: fold the two AE result sets into the breakdown. Split out from the
+// query so the arithmetic is testable without touching the network.
+export function aggregateMcpMethodRows(
+  methodRows: AeRow[],
+  uaRows: AeRow[],
+  windowDays: number,
+): McpMethodBreakdown {
+  const byMethod = new Map<string, number>();
+  for (const r of methodRows) {
+    const m = String(r.method ?? '');
+    if (m) byMethod.set(m, (byMethod.get(m) || 0) + (Number(r.requests) || 0));
+  }
+  let total = 0;
+  for (const v of byMethod.values()) total += v;
+
+  const by_method = [...byMethod.entries()]
+    .map(([method, requests]) => ({
+      method,
+      requests,
+      share: total > 0 ? requests / total : 0,
+    }))
+    .sort((a, b) => b.requests - a.requests);
+
+  const uaAcc = new Map<string, { requests: number; tools_call: number; methods: Set<string> }>();
+  for (const r of uaRows) {
+    const ua = String(r.ua ?? '') || 'unknown';
+    const method = String(r.method ?? '');
+    const n = Number(r.requests) || 0;
+    let acc = uaAcc.get(ua);
+    if (!acc) {
+      acc = { requests: 0, tools_call: 0, methods: new Set<string>() };
+      uaAcc.set(ua, acc);
+    }
+    acc.requests += n;
+    if (method) acc.methods.add(method);
+    if (method === 'tools/call') acc.tools_call += n;
+  }
+  const by_ua = [...uaAcc.entries()]
+    .map(([ua, v]) => ({
+      ua,
+      requests: v.requests,
+      tools_call: v.tools_call,
+      distinct_methods: v.methods.size,
+    }))
+    .sort((a, b) => b.requests - a.requests)
+    .slice(0, 20);
+
+  const initialize = byMethod.get('initialize') ?? 0;
+  const tools_list = byMethod.get('tools/list') ?? 0;
+  const tools_call = byMethod.get('tools/call') ?? 0;
+  const malformed = (byMethod.get('parse_error') ?? 0) + (byMethod.get('invalid_request') ?? 0);
+
+  return {
+    window_days: windowDays,
+    total_requests: total,
+    by_method,
+    by_ua,
+    handshake: {
+      initialize,
+      tools_list,
+      tools_call,
+      calls_per_initialize: initialize > 0 ? tools_call / initialize : 0,
+      malformed,
+    },
+    note:
+      'One datapoint per hosted /api/mcp request, keyed by JSON-RPC method (GET is the discovery probe). Counts start from the deploy that added tf_mcp_methods, so a window wider than the instrumentation age under-reports. stdio (npx) installs never reach this endpoint; npm downloads remain the install signal.',
+  };
+}
+
+// Read the method breakdown from AE. Returns null when AE is unconfigured or
+// either leg fails, same all-or-nothing contract as buildHostedFromAE.
+export async function buildMcpMethodBreakdown(env: Env, days: number): Promise<McpMethodBreakdown | null> {
+  // Clamped to a fixed set, so interpolating it into the SQL is injection-safe.
+  const d = days === 30 ? 30 : days === 7 ? 7 : 1;
+  const [methodRows, uaRows] = await Promise.all([
+    runAeSql(
+      env,
+      `SELECT index1 AS method, SUM(_sample_interval) AS requests FROM tf_mcp_methods WHERE timestamp > NOW() - INTERVAL '${d}' DAY GROUP BY method ORDER BY requests DESC LIMIT 50`,
+    ),
+    runAeSql(
+      env,
+      `SELECT blob2 AS ua, index1 AS method, SUM(_sample_interval) AS requests FROM tf_mcp_methods WHERE timestamp > NOW() - INTERVAL '${d}' DAY GROUP BY ua, method ORDER BY requests DESC LIMIT 500`,
+    ),
+  ]);
+  if (methodRows === null || uaRows === null) return null;
+  return aggregateMcpMethodRows(methodRows, uaRows, d);
 }
 
 // Legacy fallback: read hosted-endpoint counts from the KV daily counters.

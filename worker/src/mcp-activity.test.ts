@@ -1,5 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { aggregateHostedFromAeRows, lastNDatesUtc } from './mcp-activity';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  aggregateHostedFromAeRows,
+  lastNDatesUtc,
+  aggregateMcpMethodRows,
+  normalizeMcpMethod,
+  recordMcpMethod,
+} from './mcp-activity';
+import type { Env } from './types';
 
 describe('lastNDatesUtc', () => {
   it('returns n UTC dates, today first, descending', () => {
@@ -93,5 +100,124 @@ describe('aggregateHostedFromAeRows', () => {
     const s = JSON.stringify(out);
     expect([...s].some((c) => c.codePointAt(0) === 0x2014)).toBe(false);
     expect(s.includes('--')).toBe(false);
+  });
+});
+
+describe('normalizeMcpMethod', () => {
+  it('keeps the methods the endpoint actually answers', () => {
+    for (const m of ['GET', 'initialize', 'notifications/initialized', 'ping', 'tools/list', 'tools/call']) {
+      expect(normalizeMcpMethod(m)).toBe(m);
+    }
+  });
+
+  it('keeps the two malformed buckets distinct, since they are the scanner tell', () => {
+    expect(normalizeMcpMethod('parse_error')).toBe('parse_error');
+    expect(normalizeMcpMethod('invalid_request')).toBe('invalid_request');
+  });
+
+  it('collapses anything else so a scanner cannot blow up index cardinality', () => {
+    for (const m of ['resources/list', 'admin/../../etc/passwd', '', 'x'.repeat(500)]) {
+      expect(normalizeMcpMethod(m)).toBe('other');
+    }
+  });
+});
+
+describe('recordMcpMethod', () => {
+  it('writes one datapoint keyed by method with the UA family', () => {
+    const writeDataPoint = vi.fn();
+    recordMcpMethod({ MCP_METHOD_AE: { writeDataPoint } } as unknown as Env, 'tools/list', 'claude');
+    expect(writeDataPoint).toHaveBeenCalledOnce();
+    const dp = writeDataPoint.mock.calls[0][0];
+    expect(dp.indexes).toEqual(['tools/list']);
+    expect(dp.blobs[0]).toBe('tools/list');
+    expect(dp.blobs[1]).toBe('claude');
+  });
+
+  it('normalizes an unknown method before indexing it', () => {
+    const writeDataPoint = vi.fn();
+    recordMcpMethod({ MCP_METHOD_AE: { writeDataPoint } } as unknown as Env, 'resources/read', 'axios');
+    expect(writeDataPoint.mock.calls[0][0].indexes).toEqual(['other']);
+  });
+
+  it('no-ops without the binding instead of throwing', () => {
+    expect(() => recordMcpMethod({} as Env, 'initialize', 'curl')).not.toThrow();
+  });
+
+  it('never lets a telemetry failure escape into the request path', () => {
+    const writeDataPoint = vi.fn(() => {
+      throw new Error('AE down');
+    });
+    expect(() =>
+      recordMcpMethod({ MCP_METHOD_AE: { writeDataPoint } } as unknown as Env, 'ping', 'node'),
+    ).not.toThrow();
+  });
+});
+
+describe('aggregateMcpMethodRows', () => {
+  const methodRows = [
+    { method: 'GET', requests: 6000 },
+    { method: 'initialize', requests: 3000 },
+    { method: 'tools/list', requests: 2900 },
+    { method: 'tools/call', requests: 9 },
+    { method: 'parse_error', requests: 80 },
+    { method: 'invalid_request', requests: 11 },
+  ];
+  const uaRows = [
+    { ua: 'scanbot', method: 'GET', requests: 5800 },
+    { ua: 'claude', method: 'initialize', requests: 40 },
+    { ua: 'claude', method: 'tools/list', requests: 40 },
+    { ua: 'claude', method: 'tools/call', requests: 9 },
+    { ua: 'axios', method: 'initialize', requests: 2900 },
+    { ua: 'axios', method: 'tools/list', requests: 2800 },
+  ];
+
+  it('totals requests and ranks methods by share', () => {
+    const out = aggregateMcpMethodRows(methodRows, uaRows, 1);
+    expect(out.total_requests).toBe(12000);
+    expect(out.by_method[0]).toMatchObject({ method: 'GET', requests: 6000 });
+    expect(out.by_method[0].share).toBeCloseTo(0.5, 5);
+    expect(out.window_days).toBe(1);
+  });
+
+  it('exposes the handshake-to-call ratio that tools/call alone could not show', () => {
+    const out = aggregateMcpMethodRows(methodRows, uaRows, 1);
+    expect(out.handshake).toMatchObject({ initialize: 3000, tools_list: 2900, tools_call: 9 });
+    // 9 calls against 3000 connections: clients read the catalog and leave.
+    expect(out.handshake.calls_per_initialize).toBeCloseTo(9 / 3000, 6);
+    expect(out.handshake.malformed).toBe(91);
+  });
+
+  it('separates the client that actually invokes tools from the ones that only handshake', () => {
+    const out = aggregateMcpMethodRows(methodRows, uaRows, 7);
+    const claude = out.by_ua.find((u) => u.ua === 'claude');
+    const axios = out.by_ua.find((u) => u.ua === 'axios');
+    expect(claude).toMatchObject({ requests: 89, tools_call: 9, distinct_methods: 3 });
+    // axios connects 2,900 times and never calls a tool.
+    expect(axios).toMatchObject({ requests: 5700, tools_call: 0 });
+  });
+
+  it('ranks UAs by volume and caps the list', () => {
+    const many = Array.from({ length: 40 }, (_, i) => ({
+      ua: `ua${i}`,
+      method: 'initialize',
+      requests: i,
+    }));
+    const out = aggregateMcpMethodRows([{ method: 'initialize', requests: 780 }], many, 30);
+    expect(out.by_ua).toHaveLength(20);
+    expect(out.by_ua[0].ua).toBe('ua39');
+  });
+
+  it('coerces string-typed numeric cells and survives an empty dataset', () => {
+    const out = aggregateMcpMethodRows(
+      [{ method: 'initialize', requests: '12' }],
+      [{ ua: 'curl', method: 'initialize', requests: '12' }],
+      1,
+    );
+    expect(out.total_requests).toBe(12);
+
+    const empty = aggregateMcpMethodRows([], [], 1);
+    expect(empty.total_requests).toBe(0);
+    expect(empty.handshake.calls_per_initialize).toBe(0);
+    expect(empty.by_method).toEqual([]);
   });
 });

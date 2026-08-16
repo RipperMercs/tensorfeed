@@ -30,7 +30,8 @@
 
 import type { Env } from './types';
 import { sanitizeMcpPayload } from './sanitize';
-import { recordHostedToolCall } from './mcp-activity';
+import { recordHostedToolCall, recordMcpMethod } from './mcp-activity';
+import { normalizeUaFamily } from './usage-meter';
 import { fetchCVE } from './security-cve';
 import { readKEVCurrent, summarizeKEVForFreeTier } from './security-kev';
 import { fetchEPSSCurrent } from './security-epss';
@@ -1717,8 +1718,14 @@ function classifyException(e: unknown): string {
 // ── Public entry point ──────────────────────────────────────────────
 
 export async function handleMcpHttpRequest(request: Request, env: Env): Promise<Response> {
+  // One telemetry datapoint per request, keyed by method. See recordMcpMethod:
+  // tools/call was the only thing being counted, so the bulk of this endpoint's
+  // traffic had no shape at all. Fire-and-forget, never blocks the response.
+  const uaFamily = normalizeUaFamily(request.headers.get('User-Agent') ?? '');
+
   if (request.method === 'GET') {
     // Minimal discovery surface for clients that probe via GET. Memoized.
+    recordMcpMethod(env, 'GET', uaFamily);
     return new Response(GET_DISCOVERY_BODY, { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   if (request.method !== 'POST') {
@@ -1729,11 +1736,14 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
   try {
     body = (await request.json()) as JsonRpcRequest;
   } catch {
+    recordMcpMethod(env, 'parse_error', uaFamily);
     return rpcResponse(rpcError(null, ERR_PARSE, 'parse_error: invalid JSON'));
   }
   if (!body || typeof body !== 'object' || body.jsonrpc !== '2.0' || typeof body.method !== 'string') {
+    recordMcpMethod(env, 'invalid_request', uaFamily);
     return rpcResponse(rpcError(body?.id ?? null, ERR_INVALID_REQUEST, 'invalid_request'));
   }
+  recordMcpMethod(env, body.method, uaFamily);
 
   const id = body.id ?? null;
   const auth = request.headers.get('Authorization') ?? '';

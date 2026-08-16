@@ -73,6 +73,11 @@ export interface Env {
   // to power /api/mcp/activity; npm download counts remain the primary signal
   // since stdio installs never hit the hosted endpoint.
   MCP_TOOL_CALLS_AE?: AnalyticsEngineDataset;
+  // Workers Analytics Engine: one datapoint per hosted-MCP request, keyed by
+  // JSON-RPC method (plus GET for the discovery probe). Answers what the ~13,700
+  // daily /api/mcp requests actually are, given only 9 of them were tools/call.
+  // Optional like the sibling AE bindings; recordMcpMethod no-ops when unbound.
+  MCP_METHOD_AE?: AnalyticsEngineDataset;
   // Agent Usage Meter: full-funnel telemetry (free hits, 402 probes, paid
   // calls). One AE datapoint per premium / tracked-free API response via a
   // single choke point in the fetch handler, so the high-volume funnel never
