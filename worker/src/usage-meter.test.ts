@@ -8,6 +8,8 @@ import {
   recordRequestHealth,
   classifyUaFamily,
   deriveRealAgentFunnel,
+  deriveSweeperUas,
+  SWEEPER_MIN_ENDPOINTS,
   reconcileTopPaidEndpoints,
   parseInternalWallets,
   summarizeOrganicPayers,
@@ -447,6 +449,102 @@ describe('deriveRealAgentFunnel', () => {
     // carbonmonitor aggregates across endpoints (1030+600+767=2397) and leads mako (1510).
     expect(crawler_summary.top_crawler_families[0]).toMatchObject({ ua: 'carbonmonitor', unpaid_402: 2397 });
     expect(crawler_summary.top_crawler_families[1]).toMatchObject({ ua: 'mako-pulse-prober', unpaid_402: 1510 });
+  });
+});
+
+describe('deriveSweeperUas / focused_agent_funnel', () => {
+  // A neutral-UA script that 402s across 12 distinct premium endpoints and never
+  // pays. This is the shape the name-based crawler list cannot see.
+  const sweepRows = Array.from({ length: 12 }, (_, i) => ({
+    endpoint: `/api/premium/e${i}`,
+    ua: 'axios',
+    free_hits: 0,
+    unpaid_402: 10,
+    paid: 0,
+  }));
+  // A narrow caller that wants one endpoint and pays for it.
+  const buyerRows = [
+    { endpoint: '/api/premium/whats-new', ua: 'python-httpx', free_hits: 0, unpaid_402: 4, paid: 6 },
+  ];
+  // A narrow caller that wants one endpoint and has not paid yet: real demand.
+  const prospectRows = [
+    { endpoint: '/api/premium/whats-new', ua: 'okhttp', free_hits: 0, unpaid_402: 25, paid: 0 },
+  ];
+
+  it('tags a zero-paid UA that probes many distinct endpoints as a sweeper', () => {
+    expect(deriveSweeperUas(sweepRows).has('axios')).toBe(true);
+  });
+
+  it('never tags a UA that has paid, no matter how broad its probing', () => {
+    // Same 12-endpoint sweep, but this UA paid once on a thirteenth endpoint.
+    const broadBuyer = [
+      ...sweepRows.map((r) => ({ ...r, ua: 'undici' })),
+      { endpoint: '/api/premium/route-verdict', ua: 'undici', free_hits: 0, unpaid_402: 0, paid: 1 },
+    ];
+    expect(deriveSweeperUas(broadBuyer).has('undici')).toBe(false);
+  });
+
+  it('leaves narrow callers alone whether or not they have paid', () => {
+    const s = deriveSweeperUas([...buyerRows, ...prospectRows]);
+    expect(s.has('python-httpx')).toBe(false);
+    expect(s.has('okhttp')).toBe(false);
+  });
+
+  it('does not double-count a named crawler as a sweeper', () => {
+    const crawlerSweep = sweepRows.map((r) => ({ ...r, ua: 'carbonmonitor' }));
+    expect(deriveSweeperUas(crawlerSweep).has('carbonmonitor')).toBe(false);
+  });
+
+  it('holds the sweeper below the threshold', () => {
+    const narrow = sweepRows.slice(0, SWEEPER_MIN_ENDPOINTS - 1);
+    expect(deriveSweeperUas(narrow).has('axios')).toBe(false);
+    expect(deriveSweeperUas(sweepRows.slice(0, SWEEPER_MIN_ENDPOINTS)).has('axios')).toBe(true);
+  });
+
+  it('drops sweeper volume from the focused funnel but keeps it in real_agent_funnel', () => {
+    const rows = [...sweepRows, ...prospectRows, ...buyerRows];
+    const { real_agent_funnel, focused_agent_funnel } = deriveRealAgentFunnel(rows);
+    // The sweep endpoints are non-crawler traffic, so they survive the old view.
+    expect(real_agent_funnel.find((e) => e.endpoint === '/api/premium/e0')).toBeDefined();
+    // ...and are gone from the focused one.
+    expect(focused_agent_funnel.find((e) => e.endpoint === '/api/premium/e0')).toBeUndefined();
+    // The genuine endpoint survives with both callers folded in.
+    const wn = focused_agent_funnel.find((e) => e.endpoint === '/api/premium/whats-new');
+    expect(wn).toMatchObject({ unpaid_402: 29, paid: 6 });
+  });
+
+  it('reports sweeper share of non-crawler 402 volume', () => {
+    const rows = [...sweepRows, ...prospectRows, ...buyerRows];
+    const { sweeper_summary } = deriveRealAgentFunnel(rows);
+    // sweeper 402 = 12 * 10 = 120; non-crawler 402 = 120 + 25 + 4 = 149
+    expect(sweeper_summary.sweeper_402).toBe(120);
+    expect(sweeper_summary.sweeper_share_of_agent_402).toBeCloseTo(120 / 149, 5);
+    expect(sweeper_summary.top_sweepers[0]).toMatchObject({
+      ua: 'axios',
+      unpaid_402: 120,
+      distinct_endpoints: 12,
+    });
+  });
+
+  it('keeps crawler_summary measured against total 402s, not just non-crawler ones', () => {
+    const rows = [
+      ...sweepRows,
+      { endpoint: '/api/premium/whats-new', ua: 'carbonmonitor', free_hits: 0, unpaid_402: 500, paid: 0 },
+    ];
+    const { crawler_summary, sweeper_summary } = deriveRealAgentFunnel(rows);
+    expect(crawler_summary.total_402).toBe(620);
+    expect(crawler_summary.crawler_402).toBe(500);
+    // Sweeper share is of the 120 non-crawler 402s, so the two do not overlap.
+    expect(sweeper_summary.sweeper_402).toBe(120);
+    expect(sweeper_summary.sweeper_share_of_agent_402).toBe(1);
+  });
+
+  it('returns empty structures for empty input without dividing by zero', () => {
+    const d = deriveRealAgentFunnel([]);
+    expect(d.focused_agent_funnel).toEqual([]);
+    expect(d.sweeper_summary.sweeper_402).toBe(0);
+    expect(d.sweeper_summary.sweeper_share_of_agent_402).toBe(0);
+    expect(d.crawler_summary.crawler_share).toBe(0);
   });
 });
 

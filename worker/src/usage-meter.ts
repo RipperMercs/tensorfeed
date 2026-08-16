@@ -196,6 +196,12 @@ export interface UsageReport {
   // AE token is absent (same degrade contract as funnel_by_endpoint).
   real_agent_funnel: RealAgentFunnelEntry[] | null;
   crawler_summary: CrawlerSummary | null;
+  // Sweeper-filtered view: real_agent_funnel with catalog sweepers also removed,
+  // so what is left is callers that wanted a specific endpoint. This is the
+  // funnel to price and prioritize against; real_agent_funnel is kept alongside
+  // it so the two can be compared rather than one silently replacing the other.
+  focused_agent_funnel: RealAgentFunnelEntry[] | null;
+  sweeper_summary: SweeperSummary | null;
   build_targets: Array<{ endpoint: string; reason: string }>;
   funnel_status: 'ok' | 'unavailable';
 }
@@ -429,30 +435,64 @@ export interface CrawlerSummary {
   top_crawler_families: Array<{ ua: string; unpaid_402: number }>;
 }
 
-export function deriveRealAgentFunnel(rows: FunnelByUaRow[]): {
-  real_agent_funnel: RealAgentFunnelEntry[];
-  crawler_summary: CrawlerSummary;
-} {
-  const byEndpoint = new Map<string, { free_hits: number; unpaid_402: number; paid: number }>();
-  const crawlerByUa = new Map<string, number>();
-  let total402 = 0;
-  let crawler402 = 0;
+// === Catalog sweepers ===
+//
+// CRAWLER_UA_FAMILIES and the substring list only catch bots that say what they
+// are. They cannot catch a sweeper behind a neutral UA, and those are the ones
+// that quietly inflate "real agent demand": on a single day seven different
+// premium endpoints each logged exactly ten non-crawler 402s, which is one
+// script walking the price list, not seven agents wanting seven things.
+//
+// So classify on behavior instead of name. A real buyer is narrow, it calls the
+// one or two endpoints its job needs. A caller that 402s across a wide slice of
+// the premium catalog and has never once paid is enumerating it.
+//
+// The paid check is the safety rail and it is absolute: a UA with even one paid
+// call is never tagged a sweeper, so this can never erase a real customer. That
+// is the same conservatism classifyUaFamily uses, applied to behavior.
+export const SWEEPER_MIN_ENDPOINTS = 10;
 
+export interface SweeperSummary {
+  sweeper_402: number;
+  // Share of NON-crawler 402 volume that came from catalog sweepers. This is the
+  // number that says how much of the old real-agent figure was never demand.
+  sweeper_share_of_agent_402: number;
+  top_sweepers: Array<{ ua: string; unpaid_402: number; distinct_endpoints: number }>;
+}
+
+// Pure: the set of non-crawler UA families that behave like catalog sweepers.
+// Crawlers are skipped first so a known bot is never double-counted as one.
+export function deriveSweeperUas(rows: FunnelByUaRow[]): Set<string> {
+  const byUa = new Map<string, { endpoints: Set<string>; paid: number }>();
   for (const r of rows) {
-    total402 += r.unpaid_402;
-    if (classifyUaFamily(r.ua) === 'crawler') {
-      crawler402 += r.unpaid_402;
-      crawlerByUa.set(r.ua, (crawlerByUa.get(r.ua) || 0) + r.unpaid_402);
-      continue;
+    if (classifyUaFamily(r.ua) === 'crawler') continue;
+    let acc = byUa.get(r.ua);
+    if (!acc) {
+      acc = { endpoints: new Set<string>(), paid: 0 };
+      byUa.set(r.ua, acc);
     }
+    if (r.unpaid_402 > 0) acc.endpoints.add(r.endpoint);
+    acc.paid += r.paid;
+  }
+  const sweepers = new Set<string>();
+  for (const [ua, v] of byUa) {
+    if (v.paid === 0 && v.endpoints.size >= SWEEPER_MIN_ENDPOINTS) sweepers.add(ua);
+  }
+  return sweepers;
+}
+
+// Collapse per-(endpoint, ua) rows into a per-endpoint funnel. Pure helper so
+// the crawler-filtered and sweeper-filtered views cannot drift apart.
+function foldByEndpoint(rows: FunnelByUaRow[]): RealAgentFunnelEntry[] {
+  const byEndpoint = new Map<string, { free_hits: number; unpaid_402: number; paid: number }>();
+  for (const r of rows) {
     const acc = byEndpoint.get(r.endpoint) || { free_hits: 0, unpaid_402: 0, paid: 0 };
     acc.free_hits += r.free_hits;
     acc.unpaid_402 += r.unpaid_402;
     acc.paid += r.paid;
     byEndpoint.set(r.endpoint, acc);
   }
-
-  const real_agent_funnel: RealAgentFunnelEntry[] = [...byEndpoint.entries()]
+  return [...byEndpoint.entries()]
     .map(([endpoint, v]) => {
       const denom = v.paid + v.unpaid_402;
       return {
@@ -464,19 +504,73 @@ export function deriveRealAgentFunnel(rows: FunnelByUaRow[]): {
       };
     })
     .sort((a, b) => b.paid - a.paid || b.unpaid_402 - a.unpaid_402);
+}
+
+export function deriveRealAgentFunnel(rows: FunnelByUaRow[]): {
+  real_agent_funnel: RealAgentFunnelEntry[];
+  focused_agent_funnel: RealAgentFunnelEntry[];
+  crawler_summary: CrawlerSummary;
+  sweeper_summary: SweeperSummary;
+} {
+  const crawlerByUa = new Map<string, number>();
+  let total402 = 0;
+  let crawler402 = 0;
+
+  const nonCrawler: FunnelByUaRow[] = [];
+  for (const r of rows) {
+    total402 += r.unpaid_402;
+    if (classifyUaFamily(r.ua) === 'crawler') {
+      crawler402 += r.unpaid_402;
+      crawlerByUa.set(r.ua, (crawlerByUa.get(r.ua) || 0) + r.unpaid_402);
+      continue;
+    }
+    nonCrawler.push(r);
+  }
+
+  const sweepers = deriveSweeperUas(rows);
+  const sweeperByUa = new Map<string, { unpaid_402: number; endpoints: Set<string> }>();
+  const focused: FunnelByUaRow[] = [];
+  let agent402 = 0;
+  let sweeper402 = 0;
+  for (const r of nonCrawler) {
+    agent402 += r.unpaid_402;
+    if (sweepers.has(r.ua)) {
+      sweeper402 += r.unpaid_402;
+      let acc = sweeperByUa.get(r.ua);
+      if (!acc) {
+        acc = { unpaid_402: 0, endpoints: new Set<string>() };
+        sweeperByUa.set(r.ua, acc);
+      }
+      acc.unpaid_402 += r.unpaid_402;
+      if (r.unpaid_402 > 0) acc.endpoints.add(r.endpoint);
+      continue;
+    }
+    focused.push(r);
+  }
 
   const top_crawler_families = [...crawlerByUa.entries()]
     .map(([ua, unpaid_402]) => ({ ua, unpaid_402 }))
     .sort((a, b) => b.unpaid_402 - a.unpaid_402)
     .slice(0, 10);
 
+  const top_sweepers = [...sweeperByUa.entries()]
+    .map(([ua, v]) => ({ ua, unpaid_402: v.unpaid_402, distinct_endpoints: v.endpoints.size }))
+    .sort((a, b) => b.unpaid_402 - a.unpaid_402)
+    .slice(0, 10);
+
   return {
-    real_agent_funnel,
+    real_agent_funnel: foldByEndpoint(nonCrawler),
+    focused_agent_funnel: foldByEndpoint(focused),
     crawler_summary: {
       total_402: total402,
       crawler_402: crawler402,
       crawler_share: total402 > 0 ? crawler402 / total402 : 0,
       top_crawler_families,
+    },
+    sweeper_summary: {
+      sweeper_402: sweeper402,
+      sweeper_share_of_agent_402: agent402 > 0 ? sweeper402 / agent402 : 0,
+      top_sweepers,
     },
   };
 }
@@ -510,18 +604,24 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   // Crawler-filtered real-agent view, derived from the per-(endpoint, ua) funnel.
   let real_agent_funnel: UsageReport['real_agent_funnel'] = null;
   let crawler_summary: UsageReport['crawler_summary'] = null;
+  let focused_agent_funnel: UsageReport['focused_agent_funnel'] = null;
+  let sweeper_summary: UsageReport['sweeper_summary'] = null;
   const byUa = await queryUsageFunnelByUa(env, days);
   if (byUa) {
     const derived = deriveRealAgentFunnel(byUa);
     real_agent_funnel = derived.real_agent_funnel;
     crawler_summary = derived.crawler_summary;
+    focused_agent_funnel = derived.focused_agent_funnel;
+    sweeper_summary = derived.sweeper_summary;
   }
 
-  // Build targets are derived from the real-agent funnel, not the raw one, so a
-  // crawler-only 402 flood (e.g. agents/directory) is never flagged as demand.
-  // Falls back to [] when the AE token is absent.
-  const build_targets = deriveBuildTargets(real_agent_funnel);
-  return { window, top_paid_endpoints, top_payers, organic_payers, organic_credits_charged, internal_payers, rails, funnel_by_endpoint, real_agent_funnel, crawler_summary, build_targets, funnel_status };
+  // Build targets come off the focused funnel: named crawlers AND behavioral
+  // catalog sweepers removed. Driving them off real_agent_funnel flagged nearly
+  // every premium endpoint as "high demand, low conversion" because one script
+  // walking the price list looks identical to broad demand when you only count
+  // 402s. Falls back to [] when the AE token is absent.
+  const build_targets = deriveBuildTargets(focused_agent_funnel);
+  return { window, top_paid_endpoints, top_payers, organic_payers, organic_credits_charged, internal_payers, rails, funnel_by_endpoint, real_agent_funnel, crawler_summary, focused_agent_funnel, sweeper_summary, build_targets, funnel_status };
 }
 
 // Request-health threshold: a request that completes slower than this many ms

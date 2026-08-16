@@ -309,6 +309,8 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'meta', name: 'Meta', logo: '/images/providers/meta.png', url: 'https://ai.meta.com',
       models: [
+        { id: 'muse-spark-1-2', name: 'Muse Spark 1.2', inputPrice: 1.25, outputPrice: 4.25, contextWindow: 1000000, released: '2026-08', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'muse-spark-1-2-contributor', name: 'Muse Spark 1.2 Contributor', inputPrice: 0.1, outputPrice: 0.2, contextWindow: 1000000, released: '2026-08', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'muse-spark-1-1', name: 'Muse Spark 1.1', inputPrice: 1.25, outputPrice: 4.25, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'llama-4-scout', name: 'Llama 4 Scout', inputPrice: 0, outputPrice: 0, contextWindow: 10000000, released: '2025-04', openSource: true, license: 'Llama 4 Community License', capabilities: ['text', 'vision', 'code'], tier: 'mid' },
         { id: 'llama-4-maverick', name: 'Llama 4 Maverick', inputPrice: 0, outputPrice: 0, contextWindow: 1000000, released: '2025-04', openSource: true, license: 'Llama 4 Community License', capabilities: ['text', 'vision', 'code'], tier: 'flagship' },
@@ -401,7 +403,7 @@ export const BASELINE_PRICING: PricingData = {
 };
 
 export const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-07-24',
+  lastUpdated: '2026-08-02',
   benchmarks: [
     { id: 'swe_bench', name: 'SWE-bench', description: 'Real-world software engineering tasks from GitHub issues (SWE-bench Verified)', maxScore: 100 },
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
@@ -417,7 +419,7 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { model: 'GPT-5.5', provider: 'OpenAI', released: '2026-04', scores: { mmlu_pro: 94.2, human_eval: 97.1, gpqa_diamond: 78.3, math: 95.8, swe_bench: 82.6 } },
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 80.6 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 79.0 } },
-    { model: 'Kimi K3', provider: 'Moonshot AI', released: '2026-07', scores: { gpqa_diamond: 93.5 } },
+    { model: 'Kimi K3', provider: 'Moonshot AI', released: '2026-07', scores: { gpqa_diamond: 93.5, browsecomp: 91.2, hle_tools: 56.0 } },
     { model: 'Mistral Medium 3.5', provider: 'Mistral', released: '2026-05', scores: { swe_bench: 77.6 } },
     { model: 'Claude Opus 5', provider: 'Anthropic', released: '2026-07', scores: { osworld_2: 70.6, browsecomp: 90.8, frontier_code: 53.4, hle_tools: 64.7 } },
     { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0, osworld_2: 66.1, browsecomp: 87.4, frontier_code: 53.5, hle_tools: 63.9 } },
