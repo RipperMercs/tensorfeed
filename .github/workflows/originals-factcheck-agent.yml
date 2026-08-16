@@ -134,9 +134,25 @@ jobs:
         if: steps.pre.outputs.ready == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # This workflow re-fires itself as workflow_dispatch using GITHUB_TOKEN
+          # (see the redispatch job above), so the actor on every real run is the
+          # github-actions bot. The action refuses non-human actors unless they
+          # are named here, which silently killed every publish-mode fact-check:
+          # the push run only redispatches and reports success, while the
+          # dispatch run that does the actual checking failed on
+          # "Workflow initiated by non-human actor". Scoped to the one bot that
+          # is supposed to trigger this, not "*".
+          allowed_bots: github-actions
+          # max-turns was 30, which was too low to finish: the 2026-08-10 weekly
+          # run did complete its work but tripped the cap at 38 turns, and the
+          # action reported that as a failure. A publish batch can carry eight
+          # articles and each one costs a read plus several searches, so this
+          # needs real headroom or the gate goes red for doing its job.
+          # Keep comments OUT of claude_args: it is a literal block passed
+          # through to the CLI verbatim, so a '#' line becomes an argument.
           claude_args: |
             --model claude-sonnet-4-6
-            --max-turns 30
+            --max-turns 80
             --allowedTools Read,Grep,Edit,Write,WebSearch,WebFetch
           prompt: |
             You fact-check TensorFeed's published editorial articles under /originals. You can ONLY read, grep, edit, and write files, and use WebSearch and WebFetch. You have NO shell access. Do NOT run commands, use git, commit, or push. Deterministic workflow steps handle validation, the pull request, and the issue. Leave your edits in the working tree and write the report file described below.
