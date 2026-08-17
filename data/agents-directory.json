@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-16",
+  "lastUpdated": "2026-08-17",
   "categories": [
     {
       "id": "coding",
@@ -49,6 +49,16 @@
       "launched": 2026
     },
     {
+      "id": "grok-build",
+      "name": "Grok Build",
+      "provider": "xAI (SpaceXAI)",
+      "category": "coding",
+      "description": "xAI's official terminal coding agent, invoked as the grok command. Runs up to 8 parallel sub-agents and has defaulted to Grok 4.6 with a 500K context window since August 12, 2026.",
+      "url": "https://x.ai/build",
+      "pricing": "No standalone plan; bundled into xAI subscriptions at SuperGrok $30/mo, X Premium+ $40/mo, and SuperGrok Heavy $300/mo. Every tier unlocks the same CLI and differs only in usage limits. Headless use via the API bills grok-build-0.1 at roughly $0.20/$1.50 per 1M tokens",
+      "launched": 2026
+    },
+    {
       "id": "claude-code",
       "name": "Claude Code",
       "provider": "Anthropic",
@@ -61,9 +71,9 @@
     {
       "id": "cursor",
       "name": "Cursor",
-      "provider": "Anysphere",
+      "provider": "SpaceXAI (formerly Anysphere)",
       "category": "coding",
-      "description": "An AI-native code editor built on VS Code that provides inline code generation, multi-file editing, and codebase-aware chat powered by multiple foundation models.",
+      "description": "An AI-native code editor built on VS Code that provides inline code generation, multi-file editing, and codebase-aware chat powered by multiple foundation models. SpaceX closed its $60 billion all-stock acquisition of maker Anysphere on August 14, 2026, folding Cursor into the SpaceXAI unit alongside Grok Build and Grok Bot.",
       "url": "https://cursor.sh",
       "pricing": "Free tier, Pro $20/mo, Business $40/mo",
       "launched": 2023
@@ -146,6 +156,26 @@
       "description": "A 24/7 personal AI agent announced at Google I/O May 2026 that runs continuously in the background, managing Gmail, Google Calendar, and 30+ third-party tools via MCP connections. Designed to handle tasks proactively with user approval gates.",
       "url": "https://blog.google/products-and-platforms/products/google-one/google-ai-subscriptions/",
       "pricing": "Google AI Ultra subscription required (~$100/mo); US beta access for Ultra subscribers",
+      "launched": 2026
+    },
+    {
+      "id": "openclaw",
+      "name": "OpenClaw",
+      "provider": "OpenClaw (Peter Steinberger)",
+      "category": "general",
+      "description": "Open-source personal AI agent that runs locally, keeps context across conversations, and acts on the user's own machine, driven mainly through messaging platforms rather than a chat window. Shipped in 2025 as Clawdbot, renamed Moltbot over a trademark conflict, and settled on OpenClaw in January 2026 before passing 100,000 GitHub stars the month after.",
+      "url": "https://github.com/openclaw/openclaw",
+      "pricing": "Free and open source; you pay only whatever model provider it calls",
+      "launched": 2025
+    },
+    {
+      "id": "grok-bot",
+      "name": "Grok Bot",
+      "provider": "xAI (SpaceXAI)",
+      "category": "general",
+      "description": "Always-on agents that each get their own cloud computer, sign into a customer's existing tools, and finish multi-step jobs unsupervised, including inside apps and sites that expose no clean API or MCP integration. Work continues after the user closes the laptop, and the agent comes back when it needs approval rather than direction at every step.",
+      "url": "https://x.ai/bot",
+      "pricing": "No standalone plan and no published per-bot fee. Beta access ships with SuperGrok Heavy (about $300/mo), Cursor Ultra ($200/mo), and Cursor Teams Premium ($120/user/mo), each including weekly usage with on-demand overage billed at model and token cost",
       "launched": 2026
     },
     {
