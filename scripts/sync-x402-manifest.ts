@@ -640,22 +640,40 @@ function main(): void {
     if (!parentTemplate) continue;
     const parentPilot = getBazaarPilotConfig(parentTemplate);
     if (!parentPilot) continue;
+    // Price is inherited from the parent template, never assumed. A hardcoded
+    // `credits: 1` here shipped all 10 /api/premium/providers/{slug} split cards
+    // advertising 20000 (1 credit) while the runtime 402 demands 100000 (5
+    // credits, the price on the :name parent). Under the x402 `exact` scheme an
+    // agent that budgets from the catalog card then submits the advertised
+    // amount gets rejected, so a wrong price is a dead discovery-to-payment
+    // path, not a cosmetic drift. The CVE split families masked this because
+    // their parents genuinely are 1 credit.
+    const parentMeta = PILOT_METADATA[parentTemplate];
     const meta: PilotMeta = {
       name: inst.name,
       category: inst.category,
-      credits: 1,
-      method: 'GET',
+      credits: parentMeta?.credits ?? 1,
+      method: parentMeta?.method ?? 'GET',
     };
     const existingIdx = existingByPath.get(inst.concretePath);
     if (existingIdx !== undefined) {
       const item = manifest.items[existingIdx];
+      // credits and amount belong in this fingerprint. Omitting them meant an
+      // already-written split instance could never be re-priced: applyCredits
+      // was never called on the refresh path, and even a manual correction
+      // would not have moved lastUpdated. That is why the mispriced provider
+      // cards sat frozen at their original lastUpdated through every later
+      // sync run, with the script reporting "0 refreshed splits" every time.
       const before =
         JSON.stringify(item.extensions ?? null) +
         '|' + (item.metadata?.description ?? '') +
         '|' + (typeof item.resource === 'object' ? item.resource.description ?? '' : '') +
+        '|' + (item.metadata?.credits ?? '') +
+        '|' + (item.accepts?.[0]?.amount ?? '') +
         '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       item.extensions = parentPilot.extension;
       applyOutputSchema(item, parentPilot);
+      applyCredits(item, meta);
       if (item.metadata) {
         item.metadata.description = parentPilot.description;
         item.metadata.name = inst.name;
@@ -670,6 +688,8 @@ function main(): void {
         JSON.stringify(item.extensions) +
         '|' + item.metadata.description +
         '|' + (typeof item.resource === 'object' ? item.resource.description ?? '' : '') +
+        '|' + item.metadata.credits +
+        '|' + (item.accepts?.[0]?.amount ?? '') +
         '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       if (before !== after) {
         item.lastUpdated = today;

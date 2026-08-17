@@ -4268,7 +4268,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -4280,7 +4280,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -4289,12 +4289,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider deep-dive",
     "description": "Everything about one AI provider in one paid call: live status, all models with pricing + tier + benchmark scores joined, recent news, agent traffic. Aggregation over 4 free endpoints.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-deepdive"
    }
   },
@@ -13672,7 +13672,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -13693,7 +13693,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -13711,12 +13711,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Anthropic",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -13824,7 +13824,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -13845,7 +13845,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -13863,12 +13863,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: OpenAI",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -13976,7 +13976,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -13997,7 +13997,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14015,12 +14015,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Google",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -14128,7 +14128,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -14149,7 +14149,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14167,12 +14167,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Meta",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -14280,7 +14280,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -14301,7 +14301,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14319,12 +14319,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Mistral",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -14432,7 +14432,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -14453,7 +14453,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14471,12 +14471,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Cohere",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -14584,7 +14584,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -14605,7 +14605,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14623,12 +14623,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: DeepSeek",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -14736,7 +14736,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -14757,7 +14757,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14775,12 +14775,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: xAI",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -14888,7 +14888,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -14909,7 +14909,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -14927,12 +14927,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Microsoft",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -15040,7 +15040,7 @@
     {
      "scheme": "exact",
      "network": "eip155:8453",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
      "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
      "maxTimeoutSeconds": 60,
@@ -15061,7 +15061,7 @@
     {
      "scheme": "exact",
      "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-     "amount": "20000",
+     "amount": "100000",
      "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
      "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
      "maxTimeoutSeconds": 60,
@@ -15079,12 +15079,12 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-17T00:00:00Z",
    "metadata": {
     "name": "Provider digest: Amazon Bedrock",
     "description": "Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.",
     "tier": 1,
-    "credits": 1,
+    "credits": 5,
     "category": "ai-provider-digest"
    },
    "extensions": {
@@ -28123,5 +28123,5 @@
    "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
   }
  ],
- "lastUpdated": "2026-07-19T00:00:00Z"
+ "lastUpdated": "2026-08-17T00:00:00Z"
 }
