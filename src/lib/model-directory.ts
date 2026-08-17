@@ -382,6 +382,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     tier: 'mid',
   },
   {
+    slug: 'gemini-3-7-flash',
+    pricingId: 'gemini-3-7-flash',
+    benchmarkName: 'Gemini 3.7 Flash',
+    providerId: 'google',
+    providerName: 'Google',
+    providerUrl: 'https://ai.google.dev',
+    seoTitle: 'Gemini 3.7 Flash: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Gemini 3.7 Flash by Google, released August 13, 2026 at $0.75/$3.75 per 1M tokens, half the 3.6 Flash rate. 1M context, benchmarks, and specs on TensorFeed.',
+    intro:
+      'Gemini 3.7 Flash went generally available on August 13, 2026, three weeks after Gemini 3.6 Flash and with Gemini 3.5 Pro still unshipped. The model id is gemini-3.7-flash. Introductory pricing is $0.75 per million input tokens and $3.75 per million output through December 31, 2026, exactly half the 3.6 Flash rate, after which it reverts to $1.50/$7.50. Batch and Flex processing halve that again to $0.375 and $1.875. It carries a 1,048,576 token input window, up to 65,536 output tokens, and accepts text, image, audio, video, and PDF input. Google says it did not retrain from scratch: 3.7 Flash is built on algorithmic improvements and user feedback applied to the 3.6 line, and it fully replaces rather than supplements the previous version. The published gains are concentrated in coding and agent work. DeepSWE v1.1 moves from 48.6 to 65.3 percent, FrontierCode 1.1 Main from 34.4 to 43.6, Terminal-Bench 2.1 lands at 85.8, and GDM-MRCR v2 reports 97.0 percent long-context retrieval at 128K. The honest caveat is the same one that applied to 3.6: these are Google-reported figures, Artificial Analysis has no SWE-bench Verified score for 3.7 Flash yet, and independent runs have not landed. The strategic read matters as much as the numbers. Google is shipping its cheap tier on a three-week cadence at falling prices while its flagship Pro model slips a third and fourth time, which makes Flash the practical Google model for anyone building agents today. Day-one availability spans the Gemini API, Google AI Studio, Android Studio, Google Antigravity, the Gemini Enterprise Agent Platform, and the Gemini app.',
+    strengths: ['$0.75/$3.75 introductory pricing, half the Gemini 3.6 Flash rate', 'DeepSWE v1.1 up from 48.6 to 65.3 percent on Google\'s own numbers', '85.8 percent on Terminal-bench 2.1 for agent workflows', '1,048,576 token input window with 64K max output', '97.0 percent GDM-MRCR v2 long-context retrieval at 128K', 'Text, image, audio, video, and PDF input'],
+    useCases: ['Agentic coding and multi-step tool use at low cost', 'High-volume web development and code review', 'Long-context retrieval over large document sets', 'Agent pipelines where per-task token spend dominates'],
+    docsUrl: 'https://ai.google.dev/gemini-api/docs',
+    tier: 'mid',
+  },
+  {
     slug: 'gemini-3-6-flash',
     pricingId: 'gemini-3-6-flash',
     benchmarkName: 'Gemini 3.6 Flash',
@@ -615,6 +632,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
 
   // ── Alibaba ────────────────────────────────────────────────────────
   {
+    slug: 'qwen3-8-max',
+    pricingId: 'qwen3-8-max',
+    benchmarkName: 'Qwen3.8-Max',
+    providerId: 'alibaba',
+    providerName: 'Alibaba',
+    providerUrl: 'https://www.alibabacloud.com/en/product/modelstudio',
+    seoTitle: 'Qwen3.8-Max: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Qwen3.8-Max by Alibaba, released August 3, 2026 at $2/$6 per 1M tokens. A 2.4T MoE with 1M context, native video input, and benchmarks on TensorFeed.',
+    intro:
+      'Qwen3.8-Max is Alibaba\'s flagship closed model, released August 3, 2026 at $2 per million input tokens and $6 per million output, a cut from the $2.50/$7.50 charged for Qwen3.7-Max. It is a Mixture-of-Experts architecture with roughly 2.4 trillion total parameters and about 95 billion active per token, a 1 million token context window, and native text, image, and video input. Caching is aggressive: implicit cache reads run $0.25 per million tokens, explicit cache creation $2.50, and explicit cache reads $0.17, which materially changes the economics of repeated long prompts. The benchmark picture is genuinely split rather than uniformly strong. Qwen reports 86.6 on Terminal-Bench 2.1, ahead of Claude Opus 4.8 and Claude Fable 5 at 84.6 but behind GPT-5.6 Sol at 88.8, and it leads PaperBench at 93.0 and IFBench at 82.8. On core software engineering it is clearly behind the Western frontier: 67.7 against Fable 5\'s 80.0 on SWE-bench Pro, and 73.5 against 88.8 on FrontierSWE. Read it as a strong agentic and instruction-following model at roughly a fifth of frontier flagship pricing, not a SWE-bench leader. Alibaba paired the release with Qwen3.8-27B open weights on August 14, giving the family a permissive local option alongside the hosted flagship. Available through Alibaba Cloud Model Studio and the Qwen API.',
+    strengths: ['$2/$6 per 1M tokens, down from $2.50/$7.50 on Qwen3.7-Max', '2.4T parameter MoE with roughly 95B active per token', '1M token context window with native text, image, and video input', '86.6 on Terminal-Bench 2.1, ahead of Opus 4.8 and Fable 5', 'Leads PaperBench at 93.0 and IFBench at 82.8', 'Cheap cache reads at $0.25 implicit and $0.17 explicit per 1M'],
+    useCases: ['Agentic tool use and long-horizon task execution', 'Multimodal document, chart, and video understanding', 'Instruction-heavy production pipelines at flagship-adjacent quality', 'Cost-sensitive workloads that would otherwise use a frontier flagship'],
+    docsUrl: 'https://www.alibabacloud.com/help/en/model-studio',
+    tier: 'flagship',
+  },
+  {
     slug: 'qwen3-7-max',
     pricingId: 'qwen3-7-max',
     benchmarkName: 'Qwen3.7-Max',
@@ -709,6 +743,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
   },
 
   // ── xAI ─────────────────────────────────────────
+  {
+    slug: 'grok-4-6',
+    pricingId: 'grok-4-6',
+    benchmarkName: 'Grok 4.6',
+    providerId: 'xai',
+    providerName: 'xAI',
+    providerUrl: 'https://x.ai',
+    seoTitle: 'Grok 4.6: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Grok 4.6 by xAI, released August 7, 2026 at $2/$6 per 1M tokens with a 500K context window and a long-context tier that doubles rates above 200K.',
+    intro:
+      'Grok 4.6 shipped on August 7, 2026 on the same 1.5 trillion parameter V9 foundation as Grok 4.5, with the entire gain coming from improved supervised fine-tuning and reinforcement learning rather than a larger model. The context window is 500,000 tokens. Pricing has a wrinkle worth budgeting for: prompts below 200,000 tokens bill at $2 per million input, $0.50 per million cached input, and $6 per million output, but once a request crosses 200,000 tokens those rates double to $4, $1, and $12, and the higher tier applies to every token in that request rather than only the overage. Do not extrapolate the $2/$6 headline across the full 500K window when you model cost of ownership. On capability, Artificial Analysis places Grok 4.6 above Kimi K3 and level with GPT-5.6 Sol, which puts it third overall on that index at a fraction of Sol\'s $5/$30 rate. xAI positioned it directly against Kimi K3, at roughly 2.8 trillion parameters, and Claude Opus 4.8, and the post-training-only approach is the argument: xAI is betting that a well-tuned 1.5T model beats a larger one at the same latency and cost envelope. A larger 2.1 trillion parameter Grok 4.7 has been signaled to follow within weeks, so treat 4.6 as a checkpoint rather than a plateau. Available through the xAI API, Grok in X, and SuperGrok.',
+    strengths: ['$2/$6 per 1M tokens below 200K, matching Grok 4.5 rates', 'Third on the Artificial Analysis index, level with GPT-5.6 Sol', '500K token context window', 'Post-training-only upgrade keeps 4.5 throughput and latency', 'Cached input at $0.50 per 1M below the 200K threshold'],
+    useCases: ['Reasoning and analysis at well under frontier flagship pricing', 'Real-time work that benefits from X platform integration', 'Coding and tool use where latency matters', 'Workloads that stay comfortably under the 200K token pricing threshold'],
+    docsUrl: 'https://docs.x.ai/docs',
+    tier: 'flagship',
+  },
   {
     slug: 'grok-4-5',
     pricingId: 'grok-4-5',

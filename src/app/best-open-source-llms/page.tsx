@@ -2,13 +2,13 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
-  title: 'Best Open Source LLMs in 2026: Kimi K3, Laguna S 2.1, Llama, DeepSeek V4 & More | TensorFeed',
+  title: 'Best Open Source LLMs in 2026: Kimi K3, Qwen3.8-27B, Laguna S 2.1, DeepSeek V4 & More | TensorFeed',
   description:
-    'Compare the best open source large language models in 2026: Kimi K3, poolside Laguna S 2.1, Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, and Cohere Command A+. Parameters, benchmarks, licensing, and how to run them locally.',
+    'Compare the best open source large language models in 2026: Kimi K3, Qwen3.8-27B, poolside Laguna S 2.1, Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Phi-4, Gemma, and Cohere Command A+. Parameters, benchmarks, licensing, and how to run them locally.',
   openGraph: {
     title: 'Best Open Source LLMs in 2026',
     description:
-      'Compare the best open source LLMs: Kimi K3, Laguna S 2.1, Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, and Cohere Command A+.',
+      'Compare the best open source LLMs: Kimi K3, Qwen3.8-27B, Laguna S 2.1, Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Phi-4, Gemma, and Cohere Command A+.',
     url: 'https://tensorfeed.ai/best-open-source-llms',
   },
   alternates: { canonical: 'https://tensorfeed.ai/best-open-source-llms' },
@@ -197,6 +197,24 @@ const models = [
     considerations: 'Not suitable for tasks requiring deep reasoning or extensive knowledge. Works best with clear, specific prompts.',
   },
   {
+    name: 'Qwen3.8-27B',
+    company: 'Alibaba',
+    parameters: '27.78B dense',
+    architecture: 'Dense Transformer, native vision-language',
+    contextWindow: '262K tokens',
+    license: 'Apache 2.0',
+    released: 'August 2026',
+    highlights: [
+      'Apache 2.0 with no size or usage carve-outs, unusual at this capability level',
+      'Natively multimodal out of the box: text, images, and hour-scale video',
+      'Terminal-Bench 2.1 rises from 63.4 to 73.0 against Qwen3.6-27B (vendor-reported)',
+      'OSWorld-Verified jumps from 63.9 to 84.3 and DeepSWE 1.1 from 13.3 to 42.2',
+      'Fits on a single high-memory card at 4-bit, so one workstation runs it',
+    ],
+    bestFor: 'The strongest locally deployable multimodal model near 30 billion parameters. Best pick for teams that want vision and video understanding on their own hardware under a permissive license, without the multi-GPU bill that DeepSeek V4 Pro or Kimi K3 demand.',
+    considerations: 'Every score above comes from Alibaba\'s own model card and has not been independently reproduced. It is a dense 27B model, so it will not match 1T-class MoE flagships on hardest-case reasoning. The 262K context window is generous for the size but well short of the 1M windows elsewhere on this list.',
+  },
+  {
     name: 'Qwen 2.5',
     company: 'Alibaba Cloud',
     parameters: '72B (also 0.5B, 1.5B, 3B, 7B, 14B, 32B variants)',
@@ -294,9 +312,9 @@ export default function BestOpenSourceLLMsPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ArticleJsonLd
         title="Best Open Source LLMs in 2026"
-        description="Compare the best open source large language models in 2026: Kimi K3, poolside Laguna S 2.1, Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
+        description="Compare the best open source large language models in 2026: Kimi K3, Qwen3.8-27B, poolside Laguna S 2.1, Llama 4, DeepSeek V4, Mistral, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
-        dateModified="2026-07-26"
+        dateModified="2026-08-16"
       />
 
       <ItemListJsonLd
@@ -306,7 +324,7 @@ export default function BestOpenSourceLLMsPage() {
         items={models.map((model) => ({ name: model.name }))}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: July 26, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: August 16, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best Open Source LLMs in 2026
