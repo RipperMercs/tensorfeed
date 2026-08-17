@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'stripe-openrouter-7b-agent-stack-consolidation',
+    title:
+      'Stripe Bought OpenRouter for $7B. The Billing Rail and the Inference Gateway Are Now One Company.',
+    author: 'Adrian Vale',
+    date: 'August 17, 2026',
+    readTime: '6 min read',
+    description:
+      "On Sunday, August 16, 2026, Bloomberg reported that Stripe has finalized a deal to acquire AI model gateway OpenRouter for more than $7 billion, roughly 5.4x the $1.3 billion Series B valuation OpenRouter closed at on May 26, 2026 just twelve weeks earlier. The Information had put the initial talks near $10 billion, and summer model price declines pushed the final number down about 30 percent. Inside the numbers table (deal size, May Series B, ~5.4x markup, $10B initial talk trimmed 30 percent, 400+ models across ~70 providers, ~25 trillion tokens routed per week up from ~5T six months prior, ~10 million developer users, ~5 percent take-rate on pass-through inference spend, Stripe already the payments processor OpenRouter used for developer top-ups), the read on the 5 percent take as a card-network-shaped interchange fee on the fastest growing category of transaction volume on the internet, why the $10B to $7B trim is a linear read on the whole summer of frontier pricing (Google Gemini 3.7 Flash halved on August 13, OpenAI Luna cut 80 percent in late July, DeepSeek V4-Pro raised 51 to 355 percent on August 13, each move subtracting cents-per-call from the aggregator's absolute spread even at a constant percentage), what Stripe gets that it did not already have (a metering surface into model, prompt volume, latency, and price sensitivity across every call; a native developer-side SKU for the Agentic Commerce Suite alongside ACP, MPP, the Link Agent Wallet, and x402 settlement on Base, Solana, and Tempo; and positioning against Cloudflare's edge-metering bet from the buyer-side x402 loop close earlier this month), the neutrality question (a routing pitch that leaned on 'no lock-in' now has a payments-company logo on the header, and enterprise procurement teams that know the words 'most favored routing' will notice), the AFTA read (a proprietary billing plus routing layer at the top run by whoever holds the credit card, and an open protocol layer at the bottom run by whoever publishes the manifest, with the boundary between them now visible in a way it was not last week), and what this does to the frontier labs (a Stripe-owned OpenRouter is a permanent chair at the pricing table Anthropic, OpenAI, and Google would rather not seat, so watch for first-party developer surfaces to be pushed harder). Three signposts: whether Cloudflare answers with a native gateway product inside 30 days, whether Anthropic or OpenAI ships a first-party router or subsidizes direct-API pricing inside 60 days to bleed traffic off the aggregator, and whether an open-source OpenRouter clone running on AFTA or x402 rails shows up inside 90 days because a 5 percent inference tax is exactly what the open community targets first.",
+  },
+  {
     slug: 'gemini-3-7-flash-half-price-mechanize-coding-loop',
     title:
       'Google Cut Gemini Flash 50 Percent the Same Day DeepSeek Raised Prices. Gemini 3.7 Flash Is the Mechanize Answer.',
