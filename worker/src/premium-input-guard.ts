@@ -59,6 +59,12 @@ export const NON_QUERY_INPUT: ReadonlySet<string> = new Set<string>([
   // POST. `lockfile` is the request BODY, not ?lockfile=. Guarding it on the
   // query string would 400 every legitimate cve-check call.
   '/api/premium/cve-check',
+  // Same shape: `spec` is the POST registration BODY. The query guard runs on
+  // GET, and GET /api/premium/watches is the free token-authed LISTING route,
+  // which takes no params at all. Guarding spec on the query string made that
+  // listing unreachable: it answered 400 missing_required_params ["spec"], so
+  // a customer who had registered a watch could never enumerate their watches.
+  '/api/premium/watches',
 ]);
 
 /** Path-template params ({ticker}) are satisfied by routing, not the query. */
@@ -121,6 +127,16 @@ const OVERRIDES: Record<string, PremiumInputSpec> = {
   '/api/premium/security/epss/series': {
     rules: [['cve_id|cve']],
     hint: 'Pass ?cve_id=CVE-YYYY-NNNNN',
+    example: 'cve_id=CVE-2024-3094',
+  },
+  // The catalog declares cve_id, but the Bazaar card, llms.txt, and the 402
+  // body advertised id. Without the alias the guard rejected the advertised
+  // spelling with a 400 before payment, so the card converted at zero, and
+  // the handler read only id, so the catalog spelling failed after payment.
+  // Both names are accepted here and in the handler.
+  '/api/premium/ai-cves/cve': {
+    rules: [['cve_id|id']],
+    hint: 'Pass ?cve_id=CVE-YYYY-NNNNN (id= is also accepted)',
     example: 'cve_id=CVE-2024-3094',
   },
   '/api/premium/history/news/clusters/full': {
