@@ -267,7 +267,7 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-08-09',
+  lastUpdated: '2026-08-16',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
@@ -302,6 +302,7 @@ export const BASELINE_PRICING: PricingData = {
         { id: 'gemini-2-0-flash', name: 'Gemini 2.0 Flash', inputPrice: 0.10, outputPrice: 0.40, contextWindow: 1000000, released: '2025-02', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },
         { id: 'gemini-3-1-flash-lite', name: 'Gemini 3.1 Flash-Lite', inputPrice: 0.25, outputPrice: 1.5, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gemini-3-5-flash', name: 'Gemini 3.5 Flash', inputPrice: 1.5, outputPrice: 9, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'gemini-3-7-flash', name: 'Gemini 3.7 Flash', inputPrice: 0.75, outputPrice: 3.75, contextWindow: 1048576, released: '2026-08', capabilities: ['text', 'vision', 'audio', 'video', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'gemini-3-6-flash', name: 'Gemini 3.6 Flash', inputPrice: 1.5, outputPrice: 7.5, contextWindow: 1048576, released: '2026-07', capabilities: ['text', 'vision', 'audio', 'video', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'gemini-3-5-flash-lite', name: 'Gemini 3.5 Flash-Lite', inputPrice: 0.3, outputPrice: 2.5, contextWindow: 1048576, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
       ],
@@ -341,12 +342,14 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'alibaba', name: 'Alibaba', logo: '/images/providers/alibaba.png', url: 'https://qwenlm.ai',
       models: [
+        { id: 'qwen3-8-max', name: 'Qwen3.8-Max', inputPrice: 2, outputPrice: 6, contextWindow: 1000000, released: '2026-08', capabilities: ['text', 'vision', 'video', 'code', 'reasoning', 'tool-use'], tier: 'flagship' },
         { id: 'qwen3-7-max', name: 'Qwen3.7-Max', inputPrice: 2.5, outputPrice: 7.5, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'code', 'reasoning', 'tool-use'], tier: 'flagship' },
       ],
     },
     {
       id: 'xai', name: 'xAI', logo: '/images/providers/xai.png', url: 'https://x.ai',
       models: [
+        { id: 'grok-4-6', name: 'Grok 4.6', inputPrice: 2, outputPrice: 6, contextWindow: 500000, released: '2026-08', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'grok-4-5', name: 'Grok 4.5', inputPrice: 2, outputPrice: 6, contextWindow: 500000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'grok-4-3', name: 'Grok 4.3', inputPrice: 1.25, outputPrice: 2.5, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
       ],
