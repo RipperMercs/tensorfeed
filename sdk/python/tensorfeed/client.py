@@ -105,10 +105,18 @@ class TensorFeed:
         # Premium endpoints, balance, and explicit-require-token paths get
         # the Authorization header. Free endpoints do not advertise a token
         # (avoids accidentally leaking it to public-data endpoints).
+        # Paths handed to _request are RELATIVE: base_url already ends in /api,
+        # and url is built as f"{base_url}{path}". The old fallback tested for
+        # "/api/premium/" and "/api/payment/balance" in that relative path, so
+        # neither could ever match and the whole fallback was dead code. Every
+        # premium method happened to pass require_token=True explicitly, except
+        # attention_series, which therefore called a paid endpoint with no
+        # Authorization header at all and 402'd for customers holding credits.
+        # Matching the relative form makes the safety net real.
         needs_auth = (
             require_token
-            or "/api/premium/" in path
-            or path == "/api/payment/balance"
+            or path.startswith("/premium/")
+            or path == "/payment/balance"
         )
         if needs_auth and self.token:
             headers["Authorization"] = f"Bearer {self.token}"
@@ -380,7 +388,9 @@ class TensorFeed:
             kwargs["from"] = from_date
         if to_date is not None:
             kwargs["to"] = to_date
-        return self._get("/premium/attention/series", **kwargs)
+        return self._request(
+            "GET", "/premium/attention/series", params=kwargs, require_token=True
+        )
 
     def agent_activity(self) -> dict[str, Any]:
         """Get agent traffic metrics. Free."""
@@ -510,7 +520,7 @@ class TensorFeed:
 
         For windows up to 90 days plus ``incident_count`` and
         ``mttr_minutes`` per provider, use ``status_leaderboard()``
-        (premium, 1 credit).
+        (premium, 5 credits).
 
         Args:
             days: 1 to 7 (default 7).

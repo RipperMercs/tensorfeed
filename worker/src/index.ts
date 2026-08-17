@@ -5173,7 +5173,7 @@ export default {
           premiumSecurityVerifiedCVE: '/api/premium/security/verified/{CVE-id} (1 credit; cross-database CVE verification: composes MITRE CVE + CISA KEV + FIRST.org EPSS + OSV.dev + CISA Vulnrichment into one fact card with confirmed_by array and corroboration_count. The single-call anti-hallucination lookup for security agents)',
           premiumHistoryNewsClustersFull: '/api/premium/history/news/clusters/full?date= or ?from=&to= (1 credit; full untruncated cross-source story clusters, single-date or 30-day range)',
           premiumHistoryNewsVerified: '/api/premium/history/news/verified?date= or ?from=&to=&min_sources=2-50 (1 credit; the verified feed - story clusters with N+ independent sources corroborating; default min_sources=4)',
-          premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
+          premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (5 credits; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
           premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
@@ -12552,13 +12552,20 @@ export default {
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
 
-      const id = url.searchParams.get('id');
+      // Accept both spellings. The catalog and the pre-payment guard declare
+      // cve_id (matching the rest of the CVE family), while the Bazaar card,
+      // llms.txt, and the 402 body all advertised id. The result was an
+      // endpoint reachable through neither published form: ?id= failed the
+      // guard with 400, and ?cve_id= cleared the guard and then failed here.
+      // Reading both, plus the cve_id|id alias in premium-input-guard, means
+      // every published spelling works and no cached card is stranded.
+      const id = url.searchParams.get('cve_id') ?? url.searchParams.get('id');
       if (!id || !/^CVE-\d{4}-\d{4,7}$/i.test(id.trim())) {
         return await premiumValidationFailure(
           {
             ok: false,
             error: 'missing_params',
-            hint: 'Pass id=CVE-YYYY-NNNNN. CVE IDs are case-insensitive (normalized to uppercase internally).',
+            hint: 'Pass cve_id=CVE-YYYY-NNNNN (id= is also accepted). CVE IDs are case-insensitive (normalized to uppercase internally).',
           },
           payment,
           request,
