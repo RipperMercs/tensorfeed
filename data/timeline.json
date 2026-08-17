@@ -1,6 +1,34 @@
 {
   "events": [
     {
+      "date": "2026-08-14",
+      "title": "Alibaba Releases Qwen3.8-27B Open Weights Under Apache 2.0",
+      "provider": "Alibaba",
+      "category": "open-source",
+      "description": "Alibaba published the Qwen3.8-27B weights on Hugging Face and ModelScope on August 14, 2026, eleven days after the closed Qwen3.8-Max flagship. The checkpoint is 27.78 billion dense parameters under Apache 2.0, natively multimodal across text, image, and video, with a 262,144 token context window. Qwen's model card reports Terminal-Bench 2.1 rising from 63.4 to 73.0 against Qwen3.6-27B, DeepSWE 1.1 from 13.3 to 42.2, OSWorld-Verified from 63.9 to 84.3, and SWE-MM from 25.7 to 38.6. Scores are vendor-reported. The practical read is that the strongest locally deployable multimodal model near 30B parameters is now permissively licensed, which pushes the open-weight floor up again."
+    },
+    {
+      "date": "2026-08-13",
+      "title": "Google Ships Gemini 3.7 Flash at Half the Price of 3.6 While Gemini 3.5 Pro Stays Delayed",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google made Gemini 3.7 Flash generally available on August 13, 2026, three weeks after Gemini 3.6 Flash and with Gemini 3.5 Pro still unreleased after slipping past its July 17 and August 6 targets. Introductory pricing is $0.75 per 1M input tokens and $3.75 per 1M output through December 31, 2026, exactly half the 3.6 Flash rate, reverting to $1.50/$7.50 after that. The model carries a 1,048,576 token input window and 65,536 max output. Google reports DeepSWE v1.1 climbing from 48.6 to 65.3, FrontierCode 1.1 Main from 34.4 to 43.6, Terminal-Bench 2.1 at 85.8, and GDM-MRCR v2 at 97.0 percent for 128K retrieval. Google says it did not retrain from scratch and instead rebuilt on algorithmic gains and user feedback. Available in the Gemini API, AI Studio, Android Studio, Antigravity, the Gemini Enterprise Agent Platform, and the Gemini app."
+    },
+    {
+      "date": "2026-08-13",
+      "title": "Anthropic in Talks to Buy Decart for $6 Billion as Databricks Closes $5 Billion Round",
+      "provider": "Anthropic",
+      "category": "acquisition",
+      "description": "Bloomberg reported on August 13, 2026 that Anthropic is negotiating to acquire Israeli startup Decart for roughly $6 billion, which would be its largest known acquisition. Decart builds chip efficiency software that cuts AI training and inference cost, plus world models for simulated environments. The company raised $300 million in May at close to a $4 billion valuation, so $6 billion is a premium near 50 percent. Talks are not final. The same day Databricks closed a $5 billion Strategic Growth Round with Coatue, Blackstone, MGX, T. Rowe Price, and Sixth Street Growth, converting the term sheet reported in mid July. Both deals point the same direction: capital is flowing to whoever can lower the cost per token rather than raise the ceiling on capability."
+    },
+    {
+      "date": "2026-08-10",
+      "title": "OpenAI Splits Daybreak Into Blue and Red Tiers and Ships GPT-5.6-Cyber",
+      "provider": "OpenAI",
+      "category": "product-launch",
+      "description": "OpenAI restructured its Daybreak cyber defense program into two access tiers on August 10, 2026. Blue gives approved defenders a de-guardrailed GPT-5.6 Sol for vulnerability discovery, secure code review, malware analysis, incident response, and patch validation. Red gives vetted security teams the purpose-trained cyber models, including the new GPT-5.6-Cyber, built on Sol but tuned to refuse less on dual-use work and to perform better at exploit development and zero-day discovery. OpenAI reports a 95.0 percent completion rate on its internal Advanced Cybersecurity Completion Rate evaluation against 1.5 percent for stock Sol, and says the model surfaced two previously unknown V8 vulnerabilities, one patched by Google as CVE-2026-15903. This follows Anthropic's cyber-focused Mythos and marks both frontier labs shipping deliberately less restricted models to gated security customers."
+    },
+    {
       "date": "2026-08-07",
       "title": "xAI Launches Grok 4.6, Betting on Post-Training Over Parameter Count",
       "provider": "xAI",

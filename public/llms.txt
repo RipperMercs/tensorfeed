@@ -517,6 +517,7 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [GPT-5.5](https://tensorfeed.ai/models/gpt-5-5): Pricing, benchmarks, specs for OpenAI's broadly available flagship (1M context, omnimodal, $5/$30)
 - [DeepSeek V4 Pro](https://tensorfeed.ai/models/deepseek-v4-pro): Pricing, benchmarks, specs for DeepSeek's 1.6T parameter open source flagship
 - [DeepSeek V4 Flash](https://tensorfeed.ai/models/deepseek-v4-flash): Pricing, benchmarks, specs for DeepSeek's ultra-affordable open source model
+- [Qwen3.8-Max](https://tensorfeed.ai/models/qwen3-8-max): Pricing, benchmarks, specs for Alibaba's August 3, 2026 flagship (2.4T MoE, ~95B active per token; $2/$6 per 1M tokens; 1M context; native text, image, and video; 86.6 Terminal-Bench 2.1, behind Fable 5 on SWE-bench Pro at 67.7)
 - [Qwen3.7-Max](https://tensorfeed.ai/models/qwen3-7-max): Pricing, benchmarks, specs for Alibaba's flagship (1M context, extended thinking)
 - [Nemotron 3 Nano Omni](https://tensorfeed.ai/models/nemotron-3-nano-omni): Specs and benchmarks for NVIDIA's open multimodal 30B-A3B model
 - [MAI-Code-1-Flash](https://tensorfeed.ai/models/mai-code-1-flash): Pricing, specs for Microsoft's first in-house Copilot coding model (Build 2026)
@@ -524,9 +525,11 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [GLM-5.2](https://tensorfeed.ai/models/glm-5-2): Pricing, benchmarks, specs for Z.ai's 744B MoE (June 13, 2026; $1.40/$4.40 per 1M tokens; 1M context, 131K output; MIT weights; first among open-weight models on the Artificial Analysis index; trained on ~100k Huawei Ascend chips with no Nvidia)
 - [Kimi K3](https://tensorfeed.ai/models/kimi-k3): Pricing, benchmarks, specs for Moonshot AI's 2.8T MoE, the largest open-weight model ever shipped (July 16, 2026; $0.30 cache-hit / $3.00 input, $15.00 output; 1M context; native vision; 93.5 percent GPQA Diamond; needs ~1,450GB VRAM at 4-bit)
 - [LongCat-2.0](https://tensorfeed.ai/models/longcat-2): Specs and benchmarks for Meituan's June 30, 2026 open-source 1.6T MoE agentic coding model under MIT (1M context; trained end-to-end on domestic Chinese chips)
+- [Grok 4.6](https://tensorfeed.ai/models/grok-4-6): Pricing, benchmarks, specs for xAI's August 7, 2026 post-training-only upgrade on the 1.5T V9 foundation ($2/$6 below 200K tokens, doubling to $4/$12 on any request above it; 500K context; level with GPT-5.6 Sol on the Artificial Analysis index)
 - [Grok 4.5](https://tensorfeed.ai/models/grok-4-5): Pricing, benchmarks, specs for xAI's July 8, 2026 coding model on the V9 foundation ($2/$6, 500K context, fourth on the Artificial Analysis Intelligence Index)
 - [Muse Spark 1.1](https://tensorfeed.ai/models/muse-spark-1-1): Pricing, benchmarks, specs for Meta's July 9, 2026 first paid API model ($1.25/$4.25, 1M context, agentic tool-use leader on MCP Atlas)
 - [Muse Spark 1.2](https://tensorfeed.ai/models/muse-spark-1-2): Pricing, benchmarks, specs for Meta's August 5, 2026 coding update behind Muse Code ($1.25/$4.25 standard, $0.10/$0.20 contributor tier with data-training opt-in, 1M context)
+- [Gemini 3.7 Flash](https://tensorfeed.ai/models/gemini-3-7-flash): Pricing, benchmarks, specs for Google's August 13, 2026 coding and agent workhorse ($0.75/$3.75 introductory through December 31, 2026, half the 3.6 Flash rate, reverting to $1.50/$7.50; 1M context, 64K output; DeepSWE v1.1 up from 48.6 to 65.3 percent)
 - [Gemini 3.6 Flash](https://tensorfeed.ai/models/gemini-3-6-flash): Pricing, benchmarks, specs for Google's July 21, 2026 workhorse Flash model ($1.50/$7.50, down from $9.00 output on 3.5 Flash; 1M context, 64K output; 17 percent fewer output tokens)
 - [Gemini 3.5 Flash-Lite](https://tensorfeed.ai/models/gemini-3-5-flash-lite): Pricing, benchmarks, specs for Google's fastest 3.5-series model (July 21, 2026; $0.30/$2.50; 1M context; about 350 output tokens per second)
 - [Laguna S 2.1](https://tensorfeed.ai/models/laguna-s-2-1): Pricing, benchmarks, specs for poolside's first public model (July 21, 2026; 118B total / ~8B active MoE; open weights day one under OpenMDW-1.1; $0.10/$0.20; 1M context)
@@ -557,6 +560,9 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Claude Opus 5 vs Claude Opus 4.8](https://tensorfeed.ai/compare/claude-opus-5-vs-claude-opus-4-8): Anthropic's July 24, 2026 Opus release vs its predecessor at identical $5/$25 pricing, plus the three API defaults that changed
 - [Claude Opus 5 vs Claude Fable 5](https://tensorfeed.ai/compare/claude-opus-5-vs-claude-fable-5): Half the price at $5/$25 vs $10/$50, and the row-by-row benchmark split where the cheaper model wins most comparisons
 - [Muse Spark 1.1 vs Claude Sonnet 5](https://tensorfeed.ai/compare/muse-spark-1-1-vs-claude-sonnet-5): Meta's first paid agentic model vs Anthropic's price/performance pick, tool-use versus verified accuracy
+- [Gemini 3.7 Flash vs Gemini 3.6 Flash](https://tensorfeed.ai/compare/gemini-3-7-flash-vs-gemini-3-6-flash): Introductory pricing halves to $0.75/$3.75 through December 31, 2026 and DeepSWE v1.1 jumps 48.6 to 65.3, with the same 1M window on both
+- [Qwen3.8-Max vs Claude Opus 5](https://tensorfeed.ai/compare/qwen3-8-max-vs-claude-opus-5): Alibaba's 2.4T MoE at $2/$6 against Anthropic's Opus flagship at $5/$25, with a benchmark split that favors Qwen on agentic tool use and Opus on software engineering
+- [Grok 4.6 vs GPT-5.6 Sol](https://tensorfeed.ai/compare/grok-4-6-vs-gpt-5-6-sol): Artificial Analysis ranks them level, but Grok charges $2/$6 against $5/$30, with a 200K token cliff that doubles rates on the whole request
 - [Gemini 3.6 Flash vs Gemini 3.5 Flash](https://tensorfeed.ai/compare/gemini-3-6-flash-vs-gemini-3-5-flash): Output drops to $7.50 from $9.00 while capability holds, an economics upgrade rather than a capability jump
 - [Gemini 3.6 Flash vs Claude Sonnet 5](https://tensorfeed.ai/compare/gemini-3-6-flash-vs-claude-sonnet-5): Mid-tier head to head. $1.50/$7.50 against $2/$10, token efficiency and multimodal input against vendor-reported SWE-bench Verified scores
 - [Laguna S 2.1 vs Kimi K3](https://tensorfeed.ai/compare/laguna-s-2-1-vs-kimi-k3): Open weights you can actually run. 118B / ~8B active against 2.8T needing roughly 1,450GB at 4-bit, $0.10/$0.20 against $3/$15
@@ -570,14 +576,14 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Mistral](https://tensorfeed.ai/providers/mistral): European AI models, pricing, and overview
 - [Cohere](https://tensorfeed.ai/providers/cohere): Enterprise RAG models and Command R overview
 - [DeepSeek](https://tensorfeed.ai/providers/deepseek): Open source V4 models, MIT license, pricing, and overview
-- [Alibaba](https://tensorfeed.ai/providers/alibaba): Qwen family, Qwen3.7-Max flagship, pricing, and overview
+- [Alibaba](https://tensorfeed.ai/providers/alibaba): Qwen family, Qwen3.8-Max flagship, Qwen3.8-27B Apache 2.0 open weights, pricing, and overview
 - [NVIDIA](https://tensorfeed.ai/providers/nvidia): Nemotron open multimodal models and self-host overview
 - [Microsoft](https://tensorfeed.ai/providers/microsoft): MAI models, GitHub Copilot integration, Foundry, and overview
 - [MiniMax](https://tensorfeed.ai/providers/minimax): M3 open-weight model, sparse attention, pricing, and overview
 - [Z.ai (Zhipu AI)](https://tensorfeed.ai/providers/zhipu): GLM family, GLM-5.2 flagship, MIT open weights, Huawei Ascend training story, pricing, and overview
 - [Moonshot AI](https://tensorfeed.ai/providers/moonshot): Kimi family, Kimi K3 flagship, largest open-weight model shipped, pricing, and overview
 - [Meituan](https://tensorfeed.ai/providers/meituan): LongCat-2.0 open-source 1.6T MoE coding model, MIT license, domestic-chip training story, and overview
-- [xAI](https://tensorfeed.ai/providers/xai): Grok models, Grok 4.5 coding model, pricing, real-time X data, and company overview
+- [xAI](https://tensorfeed.ai/providers/xai): Grok models, Grok 4.6 and Grok 4.5 coding models, pricing, real-time X data, and company overview
 - [poolside](https://tensorfeed.ai/providers/poolside): Laguna coding models, Laguna S 2.1 open weights at ~8B active, $0.10/$0.20 pricing, and company overview
 
 ## Merchant Surfaces (paid offerings)
