@@ -47,7 +47,7 @@ export interface HarnessesData {
 }
 
 export const HARNESSES_DATA: HarnessesData = {
-  lastUpdated: '2026-04-30',
+  lastUpdated: '2026-08-17',
   note: "Snapshot of public agentic-coding leaderboard data. Each result is the harness vendor's self-reported best published score for the named base model on the named benchmark. We aggregate; we do not re-run. See sourceUrl on each entry for the upstream report. Refreshed weekly.",
   benchmarks: [
     {
@@ -100,6 +100,7 @@ export const HARNESSES_DATA: HarnessesData = {
     { id: 'claude-code', name: 'Claude Code', vendor: 'Anthropic', type: 'cli', openSource: false, url: 'https://www.anthropic.com/claude-code', modelLockIn: 'Anthropic models only', summary: 'Anthropic\'s official terminal agent. Native MCP, hooks, slash commands, subagent orchestration, and CLAUDE.md project memory.' },
     { id: 'cursor-agent', name: 'Cursor Agent', vendor: 'Anysphere (Cursor)', type: 'ide', openSource: false, url: 'https://cursor.com', modelLockIn: 'Multi-model, BYOK', summary: 'VS Code fork with a multi-file agent (Composer) and a hosted background agent. Largest paid install base of any AI IDE.' },
     { id: 'codex-cli', name: 'Codex CLI', vendor: 'OpenAI', type: 'cli', openSource: true, url: 'https://github.com/openai/codex', modelLockIn: 'OpenAI models only', summary: 'OpenAI\'s open-source terminal agent. Sandboxed code execution, OpenAI Apps SDK plug-ins, MIT license.' },
+    { id: 'grok-build', name: 'Grok Build', vendor: 'xAI', type: 'cli', openSource: false, url: 'https://x.ai/build', modelLockIn: 'Grok models only', summary: 'xAI\'s official terminal agent, run as the grok command. Up to 8 parallel sub-agents, defaulting to Grok 4.6 with a 500K context since August 2026.' },
     { id: 'aider', name: 'Aider', vendor: 'Paul Gauthier', type: 'cli', openSource: true, url: 'https://aider.chat', modelLockIn: 'Multi-model, BYOK', summary: 'Open-source CLI. Edit-by-diff over whole-file rewrites; runs on any OpenAI-compatible model. Maintains the Polyglot leaderboard.' },
     { id: 'openhands', name: 'OpenHands', vendor: 'All Hands AI', type: 'agent-platform', openSource: true, url: 'https://github.com/All-Hands-AI/OpenHands', modelLockIn: 'Multi-model', summary: 'Formerly OpenDevin. Open-source autonomous SWE agent with sandboxed runtime, browser tool, and microservice agent architecture.' },
     { id: 'devin', name: 'Devin', vendor: 'Cognition Labs', type: 'agent-platform', openSource: false, url: 'https://devin.ai', modelLockIn: 'Proprietary mix', summary: 'Hosted autonomous SWE agent with persistent VM workspaces, Slack and IDE integrations, and DeepWiki repo retrieval.' },

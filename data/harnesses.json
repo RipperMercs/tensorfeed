@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-30",
+  "lastUpdated": "2026-08-17",
   "note": "Snapshot of public agentic-coding leaderboard data. Each result is the harness vendor's self-reported best published score for the named base model on the named benchmark. We aggregate; we do not re-run. See sourceUrl on each entry for the upstream report. Refreshed weekly.",
   "benchmarks": [
     {
@@ -73,6 +73,16 @@
       "url": "https://github.com/openai/codex",
       "modelLockIn": "OpenAI models only",
       "summary": "OpenAI's open-source terminal agent. Sandboxed code execution, OpenAI Apps SDK plug-ins, MIT license."
+    },
+    {
+      "id": "grok-build",
+      "name": "Grok Build",
+      "vendor": "xAI",
+      "type": "cli",
+      "openSource": false,
+      "url": "https://x.ai/build",
+      "modelLockIn": "Grok models only",
+      "summary": "xAI's official terminal agent, run as the grok command. Up to 8 parallel sub-agents, defaulting to Grok 4.6 with a 500K context since August 2026."
     },
     {
       "id": "aider",
