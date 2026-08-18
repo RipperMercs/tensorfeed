@@ -16629,6 +16629,26 @@ export default {
           ...(thresholdOverride !== undefined ? { threshold_override: thresholdOverride } : {}),
         });
       }
+      // Reaching here with a non-empty task means NO branch above claimed it,
+      // so the name is unrecognized. Falling through to the full refresh
+      // silently ran a heavyweight poll and answered ok:true, which reads as
+      // "your task ran" and hid typos and not-yet-deployed task names. It cost
+      // a real debugging detour on 2026-08-18 when task=x402-registry was
+      // called against a deploy that did not have it yet. Bare /api/refresh
+      // with no task keeps meaning "refresh everything".
+      if (task) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unknown_task',
+            task,
+            message:
+              'No refresh task by that name. Omit ?task= to refresh all feeds, status, and catalog, or see the refresh entry in /api/meta for the task list.',
+          },
+          400,
+        );
+      }
+
       await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
