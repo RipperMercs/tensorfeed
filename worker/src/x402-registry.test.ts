@@ -113,6 +113,82 @@ describe('refreshX402Registry', () => {
     }
   });
 
+  // Regression guard, 2026-08-18: the crawler used to fetch only the
+  // extensionless spec path. Both federation domains publish at
+  // /.well-known/x402.json (a static-host convention), and tensorfeed.ai
+  // additionally served a stale v1 stub at the extensionless path, so the
+  // live registry reported 0 live entries while both manifests were fine.
+  it('falls back to /.well-known/x402.json when the spec path 404s', async () => {
+    const seen: string[] = [];
+    globalThis.fetch = (async (url: string) => {
+      seen.push(String(url));
+      if (String(url).endsWith('/.well-known/x402')) {
+        return { ok: false, status: 404, json: async () => ({}) };
+      }
+      return { ok: true, status: 200, json: async () => SAMPLE_MANIFEST };
+    }) as unknown as typeof globalThis.fetch;
+    const env = makeEnv();
+    const snap = await refreshX402Registry(env, { crawlDelayMs: 0 });
+    expect(snap.ok_count).toBe(2);
+    expect(snap.error_count).toBe(0);
+    for (const e of snap.entries) {
+      expect(e.status).toBe('ok');
+      expect(e.manifest_url).toBe(`https://${e.domain}/.well-known/x402.json`);
+      expect(e.paid_endpoints_count).toBe(2);
+    }
+    expect(seen.filter((u) => u.endsWith('/.well-known/x402.json'))).toHaveLength(2);
+  });
+
+  it('falls back when the spec path serves valid JSON that is not an x402 V2 manifest', async () => {
+    // The exact shape of the stale stub that used to sit at
+    // tensorfeed.ai/.well-known/x402: parses fine, has no x402Version.
+    const v1Stub = { version: 1, resources: ['GET /api/premium/routing'] };
+    globalThis.fetch = (async (url: string) => ({
+      ok: true,
+      status: 200,
+      json: async () => (String(url).endsWith('.json') ? SAMPLE_MANIFEST : v1Stub),
+    })) as unknown as typeof globalThis.fetch;
+    const env = makeEnv();
+    const snap = await refreshX402Registry(env, { crawlDelayMs: 0 });
+    expect(snap.ok_count).toBe(2);
+    for (const e of snap.entries) {
+      expect(e.status).toBe('ok');
+      expect(e.x402_version).toBe(2);
+      expect(e.manifest_url).toBe(`https://${e.domain}/.well-known/x402.json`);
+    }
+  });
+
+  it('prefers the spec path and does not fetch the fallback when it validates', async () => {
+    const seen: string[] = [];
+    globalThis.fetch = (async (url: string) => {
+      seen.push(String(url));
+      return { ok: true, status: 200, json: async () => SAMPLE_MANIFEST };
+    }) as unknown as typeof globalThis.fetch;
+    const env = makeEnv();
+    const snap = await refreshX402Registry(env, { crawlDelayMs: 0 });
+    expect(snap.ok_count).toBe(2);
+    for (const e of snap.entries) {
+      expect(e.manifest_url).toBe(`https://${e.domain}/.well-known/x402`);
+    }
+    expect(seen.some((u) => u.endsWith('.json'))).toBe(false);
+    expect(seen).toHaveLength(2);
+  });
+
+  it('reports the spec path status when neither path yields a manifest', async () => {
+    globalThis.fetch = (async (url: string) => ({
+      ok: false,
+      status: String(url).endsWith('.json') ? 500 : 404,
+      json: async () => ({}),
+    })) as unknown as typeof globalThis.fetch;
+    const env = makeEnv();
+    const snap = await refreshX402Registry(env, { crawlDelayMs: 0 });
+    for (const e of snap.entries) {
+      expect(e.status).toBe('not_found');
+      expect(e.http_status).toBe(404);
+      expect(e.manifest_url).toBe(`https://${e.domain}/.well-known/x402`);
+    }
+  });
+
   it('records http_error on 5xx', async () => {
     globalThis.fetch = (async () => ({
       ok: false,

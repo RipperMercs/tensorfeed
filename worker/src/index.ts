@@ -5073,7 +5073,7 @@ export default {
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
-          x402RegistrySnapshot: '/api/x402-registry/snapshot (free; live index of x402-compatible publishers, crawled daily from each domain\'s /.well-known/x402 manifest. Each entry carries status, x402 version, publisher metadata, paid + free endpoint counts, payment wallet, accepts summary, and an AFTA federation flag. Inclusion is not an endorsement; agents must verify wallets on-chain.)',
+          x402RegistrySnapshot: '/api/x402-registry/snapshot (free; daily crawl of the x402 publisher manifests TensorFeed tracks, a seeded registry covering the AFTA federation plus submitted domains rather than an ecosystem-wide catalog, read from each domain\'s /.well-known/x402 manifest. Each entry carries status, x402 version, publisher metadata, paid + free endpoint counts, payment wallet, accepts summary, and an AFTA federation flag. Inclusion is not an endorsement; agents must verify wallets on-chain.)',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
           hfTrending: '/api/hf/trending',
@@ -5249,7 +5249,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access|federal-ai-policy]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access|federal-ai-policy|x402-registry]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -5794,9 +5794,10 @@ export default {
     }
 
     // === x402 PUBLISHER REGISTRY (free) ===
-    // Live index of x402-compatible publishers, crawled daily from each
-    // domain's /.well-known/x402 manifest. Free, no auth. Powers the
-    // /x402-registry web view.
+    // Daily crawl of the seeded x402 publisher list (the AFTA federation
+    // plus submitted domains, NOT an ecosystem-wide catalog), read from each
+    // domain's /.well-known/x402 manifest with a /.well-known/x402.json
+    // fallback. Free, no auth. Powers the /x402-registry web view.
     if (path === '/api/x402-registry/snapshot') {
       const snapshot = await getLatestX402Registry(env);
       if (!snapshot) {
@@ -16379,6 +16380,24 @@ export default {
           message: 'Agent opportunities scan ran',
           ...result,
           ...(alertResult ? { alerts: alertResult } : {}),
+        });
+      }
+      if (task === 'x402-registry') {
+        // Same crawl the 02:15 UTC cron runs. Exposed as an admin task so a
+        // manifest or crawler fix can be verified on deploy instead of
+        // waiting a day for the next cron window.
+        const snap = await refreshX402Registry(env);
+        return jsonResponse({
+          message: 'x402 publisher registry crawled',
+          total: snap.total,
+          ok_count: snap.ok_count,
+          error_count: snap.error_count,
+          entries: snap.entries.map((e) => ({
+            domain: e.domain,
+            status: e.status,
+            manifest_url: e.manifest_url,
+            paid_endpoints_count: e.paid_endpoints_count,
+          })),
         });
       }
       if (task === 'mcp-registry') {
