@@ -1285,7 +1285,7 @@ const ENDPOINTS: PremiumEndpoint[] = [
     method: 'GET',
     path: '/api/premium/openrouter/series',
     description:
-      "Daily OpenRouter cross-provider catalog drift over a 90-day window. Per day: model count, cheapest paid input and output USD-per-million floor, free-tier count, namespace breadth. Plus day-over-day churn: models added, models removed, and per-model price-change counts versus the prior captured day, with sample id lists. OpenRouter's public catalog serves only current state, so this longitudinal record is captured by TensorFeed and cannot be backfilled. Optional ?from=&to= (ISO dates), default 30-day window, 90-day max.",
+      "Daily OpenRouter cross-provider catalog drift over a 90-day window. Per day: model count, cheapest paid input and output USD-per-million floor, free-tier count, namespace breadth. Plus day-over-day churn: models added, models removed, and per-model price-change counts versus the prior captured day, with sample id lists. OpenRouter's public catalog serves only current state, so this longitudinal record is captured by TensorFeed and cannot be backfilled. Optional ?from=&to= (ISO dates), default 30-day window, 90-day max. Data-quality disclosure: snapshots captured on or before 2026-08-18 came from a crawler that read only /.well-known/x402 and therefore recorded 0 reachable publishers for the registry's whole life to that point; those days are flagged crawler_defect in the response and should be read as unmeasured, not zero.",
     cost: '1 credit per call',
     example: `// Query: ?from=2026-05-01&to=2026-05-16
 {
