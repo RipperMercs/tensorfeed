@@ -148,9 +148,13 @@ export default function AgentFairTradePage() {
           <h2 className="text-2xl font-semibold text-text-primary">No-charge guarantees</h2>
         </div>
         <p className="text-text-secondary mb-4 max-w-3xl">
-          Four conditions under which the bearer is not charged a credit. Each is enforced
+          Eight conditions under which the bearer is not charged a credit. Each is enforced
           in code, not honored manually. Verify by sending the relevant condition (a
           malformed request, a tight loop, etc.) and inspecting the receipt that comes back.
+          The machine-readable list lives in{' '}
+          <a href="/.well-known/agent-fair-trade.json" className="text-accent-primary hover:underline font-mono text-sm">
+            /.well-known/agent-fair-trade.json
+          </a>.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           <article className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
@@ -193,6 +197,50 @@ export default function AgentFairTradePage() {
             </p>
             <code className="text-xs text-text-secondary block">
               code: worker/src/freshness.ts
+            </code>
+          </article>
+          <article className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
+            <h3 className="font-semibold text-text-primary mb-1">Upstream failure</h3>
+            <p className="text-sm text-text-secondary mb-2">
+              If the third-party source a paid endpoint depends on fails or returns nothing
+              usable, no charge. Their outage is not your bill.
+            </p>
+            <code className="text-xs text-text-secondary block">
+              code: worker/src/index.ts (upstream_failure)
+            </code>
+          </article>
+          <article className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
+            <h3 className="font-semibold text-text-primary mb-1">Empty result</h3>
+            <p className="text-sm text-text-secondary mb-2">
+              If we hold no records for the window or key you asked for, no charge. You still
+              get the response shape plus the coverage we do have, so the next request can be
+              aimed correctly.
+            </p>
+            <code className="text-xs text-text-secondary block">
+              code: worker/src/index.ts (empty_result)
+            </code>
+          </article>
+          <article className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
+            <h3 className="font-semibold text-text-primary mb-1">Nothing new since your cursor</h3>
+            <p className="text-sm text-text-secondary mb-2">
+              If you pass a delta cursor and nothing has changed since your mark, no charge.
+              Polling for changes that have not happened is free.
+            </p>
+            <code className="text-xs text-text-secondary block">
+              code: worker/src/delta-cursor.ts
+            </code>
+          </article>
+          <article className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
+            <h3 className="font-semibold text-text-primary mb-1">Known data defect</h3>
+            <p className="text-sm text-text-secondary mb-2">
+              If your window resolves entirely to records we have identified as wrong, no
+              charge. Different from an empty result, where we hold nothing, and from stale
+              data, where we hold something merely older than the SLA: here we hold records
+              and know they are artifacts, so the response explains the defect instead of
+              billing for it.
+            </p>
+            <code className="text-xs text-text-secondary block">
+              code: worker/src/x402-reg-series.ts (isWindowAllCrawlerDefect)
             </code>
           </article>
         </div>
