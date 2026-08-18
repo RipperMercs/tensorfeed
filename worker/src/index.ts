@@ -5073,7 +5073,7 @@ export default {
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
-          x402RegistrySnapshot: '/api/x402-registry/snapshot (free; live index of x402-compatible publishers, crawled daily from each domain\'s /.well-known/x402 manifest. Each entry carries status, x402 version, publisher metadata, paid + free endpoint counts, payment wallet, accepts summary, and an AFTA federation flag. Inclusion is not an endorsement; agents must verify wallets on-chain.)',
+          x402RegistrySnapshot: '/api/x402-registry/snapshot (free; daily crawl of the x402 publisher manifests TensorFeed tracks, a seeded registry covering the AFTA federation plus submitted domains rather than an ecosystem-wide catalog, read from each domain\'s /.well-known/x402 manifest. Each entry carries status, x402 version, publisher metadata, paid + free endpoint counts, payment wallet, accepts summary, and an AFTA federation flag. Inclusion is not an endorsement; agents must verify wallets on-chain.)',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
           hfTrending: '/api/hf/trending',
@@ -5201,7 +5201,7 @@ export default {
           premiumResearchLabProductivity: '/api/premium/research/lab-productivity?window=&affiliation_type=&limit= (1 credit; top labs by paper count over 30d/90d/365d windows, derived from TF normalized affiliations on the offline Qwen extraction. Filter by window (30d|90d|365d, default returns all three) and affiliation_type (industry|academia|government|nonprofit|mixed). arXiv has no native concept of normalized lab attribution.)',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           premiumOpenRouterSeries: '/api/premium/openrouter/series?from=&to= (1 credit; daily OpenRouter cross-provider catalog drift over a 90-day window: model count, cheapest paid input/output USD-per-million floor, free-tier count, namespace breadth, plus day-over-day model add/remove churn and per-model price-change counts. OpenRouter serves only current state, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.)',
-          premiumX402RegistrySeries: '/api/premium/x402-registry/series?from=&to= (1 credit; daily x402 publisher-registry drift over a 90-day window: reachable vs erroring publishers, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added/removed, status flips, and payment-wallet changes. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.)',
+          premiumX402RegistrySeries: '/api/premium/x402-registry/series?from=&to= (1 credit; daily x402 publisher-registry drift over a 90-day window: reachable vs erroring publishers, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added/removed, status flips, and payment-wallet changes. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90. Data-quality disclosure: snapshots captured on or before 2026-08-18 came from a crawler that read only /.well-known/x402 and therefore recorded 0 reachable publishers for the entire life of the registry up to that point; those days are flagged crawler_defect in the response and should be read as unmeasured, not zero.)',
           premiumHFVelocity: '/api/premium/hf/velocity?from=&to= (1 credit; daily Hugging Face download-velocity over a 90-day window: per-day top models and datasets by download delta and top Spaces by likes delta among the daily top-30, top-set entered/exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled. Default 30 days, max 90.)',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
@@ -5249,7 +5249,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access|federal-ai-policy]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access|federal-ai-policy|x402-registry]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -5794,9 +5794,10 @@ export default {
     }
 
     // === x402 PUBLISHER REGISTRY (free) ===
-    // Live index of x402-compatible publishers, crawled daily from each
-    // domain's /.well-known/x402 manifest. Free, no auth. Powers the
-    // /x402-registry web view.
+    // Daily crawl of the seeded x402 publisher list (the AFTA federation
+    // plus submitted domains, NOT an ecosystem-wide catalog), read from each
+    // domain's /.well-known/x402 manifest with a /.well-known/x402.json
+    // fallback. Free, no auth. Powers the /x402-registry web view.
     if (path === '/api/x402-registry/snapshot') {
       const snapshot = await getLatestX402Registry(env);
       if (!snapshot) {
@@ -16381,6 +16382,24 @@ export default {
           ...(alertResult ? { alerts: alertResult } : {}),
         });
       }
+      if (task === 'x402-registry') {
+        // Same crawl the 02:15 UTC cron runs. Exposed as an admin task so a
+        // manifest or crawler fix can be verified on deploy instead of
+        // waiting a day for the next cron window.
+        const snap = await refreshX402Registry(env);
+        return jsonResponse({
+          message: 'x402 publisher registry crawled',
+          total: snap.total,
+          ok_count: snap.ok_count,
+          error_count: snap.error_count,
+          entries: snap.entries.map((e) => ({
+            domain: e.domain,
+            status: e.status,
+            manifest_url: e.manifest_url,
+            paid_endpoints_count: e.paid_endpoints_count,
+          })),
+        });
+      }
       if (task === 'mcp-registry') {
         const result = await captureRegistrySnapshot(env);
         return jsonResponse({ message: 'MCP registry snapshot captured', ...result });
@@ -16610,6 +16629,26 @@ export default {
           ...(thresholdOverride !== undefined ? { threshold_override: thresholdOverride } : {}),
         });
       }
+      // Reaching here with a non-empty task means NO branch above claimed it,
+      // so the name is unrecognized. Falling through to the full refresh
+      // silently ran a heavyweight poll and answered ok:true, which reads as
+      // "your task ran" and hid typos and not-yet-deployed task names. It cost
+      // a real debugging detour on 2026-08-18 when task=x402-registry was
+      // called against a deploy that did not have it yet. Bare /api/refresh
+      // with no task keeps meaning "refresh everything".
+      if (task) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unknown_task',
+            task,
+            message:
+              'No refresh task by that name. Omit ?task= to refresh all feeds, status, and catalog, or see the refresh entry in /api/meta for the task list.',
+          },
+          400,
+        );
+      }
+
       await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
