@@ -248,11 +248,16 @@ describe('aggregateResults probe_signal', () => {
 
 describe('classifyProbeRecovery', () => {
   it('reports all_ok when every probe in the 20 minute window succeeded', () => {
-    const r = classifyProbeRecovery([okResult(18), okResult(3)]);
+    // Hold the fixture rather than rebuilding it in the assertion. mkResult
+    // reads Date.now() on every call, so reconstructing the same probe after
+    // the array was built made this fail whenever a millisecond ticked in
+    // between (seen in CI: expected ...04.046Z, received ...04.045Z).
+    const mostRecent = okResult(3);
+    const r = classifyProbeRecovery([okResult(18), mostRecent]);
     expect(r.all_ok).toBe(true);
     expect(r.window_count).toBe(2);
     expect(r.window_minutes).toBe(20);
-    expect(r.last_ok_at).toBe(mkResult(3, { ok: true, status: 200 }).timestamp);
+    expect(r.last_ok_at).toBe(mostRecent.timestamp);
   });
 
   it('is not all_ok when any probe in the window failed', () => {
