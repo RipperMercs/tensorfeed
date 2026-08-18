@@ -27,6 +27,27 @@ import {
  * reader.
  */
 
+/**
+ * Last UTC date whose stored snapshot was produced by the defective crawler.
+ *
+ * From the registry's launch on 2026-05-11 until the 2026-08-18 fix, the
+ * crawler fetched only the extensionless /.well-known/x402. Both seeded
+ * domains actually publish at /.well-known/x402.json, and tensorfeed.ai
+ * additionally served a stale v1 stub at the extensionless path, so every
+ * snapshot in that period recorded ok_count 0 and no churn. Those zeros are
+ * an artifact of our crawler, NOT an observation about publisher
+ * reachability, and a buyer reading the series would otherwise take them
+ * for ecosystem data.
+ *
+ * A day is flagged only when it is in range AND actually recorded zero
+ * reachable publishers, so a day re-crawled by the fixed code (for example
+ * 2026-08-18 itself, if the manual refresh reran it) is not falsely marked.
+ * The tradeoff: a genuine total-outage day inside the window would also be
+ * flagged. Over a two-domain seed list during a period we know the crawler
+ * was broken, disclosing too much beats disclosing too little.
+ */
+export const CRAWLER_DEFECT_THROUGH = '2026-08-18';
+
 export const MAX_RANGE_DAYS = 90;
 export const DEFAULT_RANGE_DAYS = 30;
 
@@ -98,6 +119,12 @@ export interface X402RegSeriesPoint {
   removed_sample: string[];
   wallet_change_sample: string[];
   has_data: boolean;
+  /**
+   * This day's counts came from the pre-2026-08-18 crawler defect, so
+   * ok_count, federation_count, and the endpoint totals are artifacts
+   * rather than observations. See CRAWLER_DEFECT_THROUGH.
+   */
+  crawler_defect: boolean;
 }
 
 export interface X402RegSeriesResult {
@@ -111,9 +138,21 @@ export interface X402RegSeriesResult {
     net: number | null;
     start_ok: number | null;
     end_ok: number | null;
+    /**
+     * The window straddles the 2026-08-18 crawler fix, so any rise in
+     * start_ok to end_ok is our crawler being repaired, not publishers
+     * coming online. Do not read it as ecosystem growth.
+     */
+    spans_crawler_defect: boolean;
   };
   attribution: typeof X402_REGISTRY_ATTRIBUTION;
   notes: string[];
+  data_quality: {
+    crawler_defect_through: string;
+    defect_days_in_window: number;
+    usable_days_in_window: number;
+    note: string | null;
+  };
 }
 
 const SAMPLE_CAP = 50;
@@ -155,6 +194,7 @@ export function projectX402RegSeries(
         removed_sample: [],
         wallet_change_sample: [],
         has_data: false,
+        crawler_defect: false,
       };
     }
 
@@ -225,6 +265,7 @@ export function projectX402RegSeries(
       removed_sample: removedSample,
       wallet_change_sample: walletChangeSample,
       has_data: true,
+      crawler_defect: date <= CRAWLER_DEFECT_THROUGH && snap.ok_count === 0,
     };
   });
 
@@ -246,6 +287,23 @@ export function projectX402RegSeries(
     );
   }
 
+  const defectDays = withData.filter((p) => p.crawler_defect).length;
+  const usableDays = withData.length - defectDays;
+  const spansDefect = defectDays > 0 && usableDays > 0;
+
+  if (defectDays > 0) {
+    notes.push(
+      usableDays === 0
+        ? `Every captured day in this range (${defectDays}) predates the 2026-08-18 crawler fix and recorded 0 reachable publishers. Those zeros are an artifact of TensorFeed's crawler reading the wrong manifest path, not publisher downtime, so this window carries no usable reachability signal.`
+        : `${defectDays} captured day(s) in this range predate the 2026-08-18 crawler fix and recorded 0 reachable publishers as an artifact of TensorFeed's crawler, not publisher downtime. Compare only the ${usableDays} day(s) after the fix.`,
+    );
+  }
+  if (spansDefect) {
+    notes.push(
+      'This window straddles the crawler fix, so any rise from start_ok to end_ok is our measurement being repaired rather than publishers coming online.',
+    );
+  }
+
   return {
     from,
     to,
@@ -257,9 +315,19 @@ export function projectX402RegSeries(
       net: startTotal !== null && endTotal !== null ? endTotal - startTotal : null,
       start_ok: first?.ok_count ?? null,
       end_ok: last?.ok_count ?? null,
+      spans_crawler_defect: spansDefect,
     },
     attribution: X402_REGISTRY_ATTRIBUTION,
     notes,
+    data_quality: {
+      crawler_defect_through: CRAWLER_DEFECT_THROUGH,
+      defect_days_in_window: defectDays,
+      usable_days_in_window: usableDays,
+      note:
+        defectDays > 0
+          ? `Snapshots captured on or before ${CRAWLER_DEFECT_THROUGH} came from a crawler that fetched only /.well-known/x402 and therefore recorded 0 reachable publishers for the registry's whole life. Treat reachability, federation, and endpoint totals on flagged days as unmeasured rather than zero.`
+          : null,
+    },
   };
 }
 

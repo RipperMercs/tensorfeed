@@ -4,6 +4,7 @@ import {
   projectX402RegSeries,
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
+  CRAWLER_DEFECT_THROUGH,
 } from './x402-reg-series';
 import {
   X402_REGISTRY_ATTRIBUTION,
@@ -187,5 +188,80 @@ describe('projectX402RegSeries', () => {
     expect(r.to).toBe('2026-05-02');
     expect(r.days).toBe(2);
     expect(r.attribution).toBe(X402_REGISTRY_ATTRIBUTION);
+  });
+});
+
+describe('crawler-defect disclosure', () => {
+  // Pre-fix days are the real stored shape: both seeds present, both erroring,
+  // so ok_count 0. See CRAWLER_DEFECT_THROUGH in x402-reg-series.ts.
+  const broken = (date: string) =>
+    snap(date, [
+      entry('tensorfeed.ai', { status: 'invalid_schema', federation_member: true }),
+      entry('terminalfeed.io', { status: 'not_found', federation_member: true }),
+    ]);
+  const healthy = (date: string) =>
+    snap(date, [
+      entry('tensorfeed.ai', { status: 'ok', federation_member: true, paid_endpoints_count: 170 }),
+      entry('terminalfeed.io', { status: 'ok', federation_member: true, paid_endpoints_count: 2 }),
+    ]);
+
+  it('flags a pre-fix zero-reachability day and does not charge the reader a wrong story', () => {
+    const r = projectX402RegSeries('2026-06-01', '2026-06-02', [
+      { date: '2026-06-01', snap: broken('2026-06-01') },
+      { date: '2026-06-02', snap: broken('2026-06-02') },
+    ]);
+    expect(r.points.every((p) => p.crawler_defect)).toBe(true);
+    expect(r.data_quality.defect_days_in_window).toBe(2);
+    expect(r.data_quality.usable_days_in_window).toBe(0);
+    expect(r.data_quality.crawler_defect_through).toBe(CRAWLER_DEFECT_THROUGH);
+    expect(r.data_quality.note).toContain('unmeasured');
+    expect(r.notes.some((n) => n.includes('no usable reachability signal'))).toBe(true);
+    // A window entirely inside the defect cannot "span" it.
+    expect(r.delta_in_window.spans_crawler_defect).toBe(false);
+  });
+
+  it('does not flag a post-fix day', () => {
+    const r = projectX402RegSeries('2026-08-19', '2026-08-19', [
+      { date: '2026-08-19', snap: healthy('2026-08-19') },
+    ]);
+    expect(r.points[0].crawler_defect).toBe(false);
+    expect(r.data_quality.defect_days_in_window).toBe(0);
+    expect(r.data_quality.note).toBeNull();
+    expect(r.delta_in_window.spans_crawler_defect).toBe(false);
+  });
+
+  it('does not flag an in-window day that the fixed crawler re-ran', () => {
+    // The flag keys on recorded zero reachability, not the date alone, so a
+    // day inside the defect window that was re-crawled correctly stays clean.
+    const r = projectX402RegSeries(CRAWLER_DEFECT_THROUGH, CRAWLER_DEFECT_THROUGH, [
+      { date: CRAWLER_DEFECT_THROUGH, snap: healthy(CRAWLER_DEFECT_THROUGH) },
+    ]);
+    expect(r.points[0].crawler_defect).toBe(false);
+    expect(r.data_quality.defect_days_in_window).toBe(0);
+  });
+
+  it('marks a window that straddles the fix so the jump is not read as growth', () => {
+    const r = projectX402RegSeries('2026-08-17', '2026-08-19', [
+      { date: '2026-08-17', snap: broken('2026-08-17') },
+      { date: '2026-08-18', snap: broken('2026-08-18') },
+      { date: '2026-08-19', snap: healthy('2026-08-19') },
+    ]);
+    expect(r.data_quality.defect_days_in_window).toBe(2);
+    expect(r.data_quality.usable_days_in_window).toBe(1);
+    expect(r.delta_in_window.spans_crawler_defect).toBe(true);
+    expect(r.delta_in_window.start_ok).toBe(0);
+    expect(r.delta_in_window.end_ok).toBe(2);
+    expect(r.notes.some((n) => n.includes('measurement being repaired'))).toBe(true);
+  });
+
+  it('leaves days with no captured snapshot unflagged', () => {
+    const r = projectX402RegSeries('2026-06-01', '2026-06-02', [
+      { date: '2026-06-01', snap: null },
+      { date: '2026-06-02', snap: broken('2026-06-02') },
+    ]);
+    expect(r.points[0].crawler_defect).toBe(false);
+    expect(r.points[0].has_data).toBe(false);
+    expect(r.points[1].crawler_defect).toBe(true);
+    expect(r.data_quality.defect_days_in_window).toBe(1);
   });
 });
