@@ -49,6 +49,14 @@ import {
 // ── Constants ──────────────────────────────────────────────────────
 
 const MANIFEST_PATH = path.resolve(__dirname, '../public/.well-known/x402.json');
+// The x402 spec names the extensionless `/.well-known/x402`, and that is the
+// path /for-ai-agents, llms.txt, and the agent-payments glossary all point
+// agents at. Until 2026-08-18 that path served a hand-written v1 stub
+// (`{"version": 1, "resources": ["GET /api/..."]}`) with no accepts, wallet,
+// or prices, so an agent following our own documented discovery route got
+// nothing payable, and our own registry crawler scored us `invalid_schema`.
+// Write the generated V2 manifest to both paths so they cannot drift again.
+const MANIFEST_PATH_CANONICAL = path.resolve(__dirname, '../public/.well-known/x402');
 const SITE_URL = 'https://tensorfeed.ai';
 const USDC_BASE_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PAYMENT_WALLET = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
@@ -737,6 +745,7 @@ function main(): void {
   // guards the byte budget so this cannot silently regress again.
   const out = JSON.stringify(manifest, null, 1) + '\n';
   fs.writeFileSync(MANIFEST_PATH, out, 'utf-8');
+  fs.writeFileSync(MANIFEST_PATH_CANONICAL, out, 'utf-8');
   if (out.length > 1_000_000) {
     throw new Error(
       `[sync-x402-manifest] Manifest is ${out.length} bytes, over the 1,000,000 crawler cap. ` +
@@ -744,6 +753,7 @@ function main(): void {
     );
   }
 
+  console.log('[sync-x402-manifest] wrote .well-known/x402 and .well-known/x402.json');
   console.log(`[sync-x402-manifest] items: ${manifest.items.length} total (${out.length} bytes), +${added} new pilots, ${refreshed} refreshed pilots, +${splitAdded} new splits, ${splitRefreshed} refreshed splits`);
 }
 

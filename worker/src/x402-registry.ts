@@ -1,13 +1,25 @@
 /**
- * x402 Registry: live index of x402-compatible publishers.
+ * x402 Registry: manifest crawl over a seeded list of x402 publishers.
+ *
+ * SCOPE, read this before describing the registry anywhere public.
+ * This is a seeded crawl, NOT an ecosystem-wide index. SEED_DOMAINS below
+ * is the entire universe it covers. It is currently the AFTA federation
+ * (tensorfeed.ai + terminalfeed.io) plus whatever arrives by submission.
+ * The ecosystem-wide catalog is CDP's Bazaar discovery index, which holds
+ * five figures of resources; this registry does not compete with it and
+ * must not be advertised as if it does. Public copy on /x402-registry and
+ * in llms.txt was corrected on 2026-08-18 after it claimed an agent could
+ * "list every machine-payable API in the ecosystem with one call" while
+ * the seed list held two domains, both ours.
  *
  * Why this exists
  * ---------------
  * Curated awesome-lists are stale within weeks. The x402 spec already
  * defines a discovery manifest at `/.well-known/x402`. The Registry crawls
- * a seed list of domains, fetches each manifest, validates the canonical
- * fields, and exposes a normalized snapshot at `/api/x402-registry/snapshot`
- * plus a web view at `/x402-registry`.
+ * the seed list, fetches each manifest, validates the canonical fields,
+ * and exposes a normalized snapshot at `/api/x402-registry/snapshot`
+ * plus a web view at `/x402-registry`. Its value is depth per publisher
+ * and a dated longitudinal record, not breadth.
  *
  * Each domain's status (ok / not_found / fetch_error / invalid_json /
  * invalid_schema / http_error) is preserved in the snapshot so consumers
@@ -72,7 +84,8 @@ export const X402_REGISTRY_ATTRIBUTION = {
   source_url: 'https://tensorfeed.ai/x402-registry',
   license:
     'TF-aggregated registry of x402 publishers. Underlying manifests are owned by their publishers and served at /.well-known/x402. TF surfaces a normalized view; inclusion is not an endorsement and agents should still verify wallet addresses on-chain and against publisher.validation.publishedAt before sending funds.',
-  source_url_per_entry: 'https://{domain}/.well-known/x402',
+  source_url_per_entry:
+    'https://{domain}/.well-known/x402 (falling back to /.well-known/x402.json); each entry reports the URL that resolved',
   refresh_cadence: 'daily',
 };
 
@@ -124,13 +137,27 @@ export interface RegistrySnapshot {
 
 // ── Crawl ───────────────────────────────────────────────────────────
 
-async function fetchManifest(domain: string): Promise<{
+interface ManifestFetch {
   status: EntryStatus;
   http_status?: number;
   error?: string;
   body?: unknown;
-}> {
-  const url = `https://${domain}/.well-known/x402`;
+  /** The URL that actually produced this result. */
+  manifest_url: string;
+}
+
+/**
+ * Publishers disagree on the discovery filename. The x402 spec names the
+ * extensionless `/.well-known/x402`, but plenty of hosts (including
+ * terminalfeed.io) serve the manifest only at `/.well-known/x402.json`,
+ * because static hosts infer the JSON content type from the extension.
+ * Crawling one path and reporting `not_found` for the other convention
+ * made the registry look empty when the manifests were fine, so try both
+ * and keep the first that yields a usable manifest.
+ */
+const MANIFEST_PATHS = ['/.well-known/x402', '/.well-known/x402.json'] as const;
+
+async function fetchManifestAt(url: string): Promise<ManifestFetch> {
   let resp: Response;
   try {
     resp = await fetch(url, {
@@ -139,21 +166,37 @@ async function fetchManifest(domain: string): Promise<{
       redirect: 'follow',
     });
   } catch (e) {
-    return { status: 'fetch_error', error: e instanceof Error ? e.message : String(e) };
+    return {
+      status: 'fetch_error',
+      error: e instanceof Error ? e.message : String(e),
+      manifest_url: url,
+    };
   }
   if (resp.status === 404) {
-    return { status: 'not_found', http_status: 404 };
+    return { status: 'not_found', http_status: 404, manifest_url: url };
   }
   if (!resp.ok) {
-    return { status: 'http_error', http_status: resp.status };
+    return { status: 'http_error', http_status: resp.status, manifest_url: url };
   }
   let body: unknown;
   try {
     body = await resp.json();
   } catch {
-    return { status: 'invalid_json', http_status: resp.status };
+    return { status: 'invalid_json', http_status: resp.status, manifest_url: url };
   }
-  return { status: 'ok', http_status: resp.status, body };
+  return { status: 'ok', http_status: resp.status, body, manifest_url: url };
+}
+
+async function fetchManifest(domain: string): Promise<ManifestFetch> {
+  let first: ManifestFetch | undefined;
+  for (const path of MANIFEST_PATHS) {
+    const attempt = await fetchManifestAt(`https://${domain}${path}`);
+    if (attempt.status === 'ok' && isPlausibleX402Manifest(attempt.body)) return attempt;
+    if (!first) first = attempt;
+  }
+  // Nothing usable. Report the canonical path's result so the status
+  // describes the spec location rather than the fallback.
+  return first as ManifestFetch;
 }
 
 // Mostly lenient schema check: we want to surface the fields we care about,
@@ -200,7 +243,7 @@ function summarizeAccepts(items: unknown[]): AcceptsSummary[] {
 function normalizeEntry(seed: SeedEntry, fetched_at: string, raw: Awaited<ReturnType<typeof fetchManifest>>): RegistryEntry {
   const base: RegistryEntry = {
     domain: seed.domain,
-    manifest_url: `https://${seed.domain}/.well-known/x402`,
+    manifest_url: raw.manifest_url,
     fetched_at,
     status: raw.status,
     federation_member: seed.federation_member,

@@ -4,16 +4,16 @@ import { ArrowRight, ExternalLink, Globe, ShieldCheck, Database } from 'lucide-r
 import RegistryTable from './RegistryTable';
 
 export const metadata: Metadata = {
-  title: 'x402 Publisher Registry: Live Index of Machine-Payable APIs',
+  title: 'x402 Publisher Registry: Daily x402 Manifest Crawl',
   description:
-    'Live registry of x402-compatible publishers, crawled daily from each domain\'s /.well-known/x402 manifest. Status, version, payment networks, endpoint counts, and AFTA federation flags in one normalized snapshot. The structured live alternative to hand-curated readmes.',
+    'Daily crawl of the x402 publisher manifests TensorFeed tracks, read from each domain\'s /.well-known/x402 manifest. Status, version, payment networks, endpoint counts, and AFTA federation flags in one normalized, dated snapshot. A seeded registry, not an ecosystem-wide catalog.',
   alternates: { canonical: 'https://tensorfeed.ai/x402-registry' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/x402-registry',
     title: 'x402 Publisher Registry',
     description:
-      'Live index of x402-compatible publishers. Daily crawl, normalized snapshot, open data export at /api/x402-registry/snapshot.',
+      'Daily crawl of the x402 manifests TensorFeed tracks. Normalized snapshot, dated history, open data export at /api/x402-registry/snapshot.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'x402 Publisher Registry',
     description:
-      'Live machine-readable index of x402 publishers. Daily crawl. Open data. Structured alternative to hand-curated readmes.',
+      'Daily machine-readable crawl of the x402 publisher manifests TensorFeed tracks. Open data, dated history.',
   },
   keywords: [
     'x402 registry',
@@ -45,11 +45,24 @@ export default function X402RegistryPage() {
           x402 Publisher Registry
         </h1>
         <p className="text-lg text-text-secondary leading-relaxed">
-          A live index of x402-compatible publishers, crawled daily from each domain&apos;s
+          A daily crawl of the x402 publisher manifests we track, read from each domain&apos;s
           {' '}
           <code className="font-mono text-sm bg-bg-secondary px-1.5 py-0.5 rounded">/.well-known/x402</code>
           {' '}
-          manifest. Status, payment networks, endpoint counts, and federation flags in one normalized snapshot.
+          manifest, falling back to
+          {' '}
+          <code className="font-mono text-sm bg-bg-secondary px-1.5 py-0.5 rounded">/.well-known/x402.json</code>
+          {' '}
+          for hosts that only serve the extension form. Status, payment networks, endpoint counts,
+          and federation flags in one normalized, dated snapshot.
+        </p>
+        <p className="text-sm text-text-muted leading-relaxed mt-3">
+          Scope: this is a seeded registry, not an ecosystem-wide catalog. It covers the AFTA
+          federation plus domains submitted to us, and the count below is the entire universe it
+          tracks. For ecosystem-wide x402 discovery the canonical catalog is Coinbase CDP&apos;s
+          Bazaar index at
+          {' '}
+          <code className="font-mono text-xs break-all">api.cdp.coinbase.com/platform/v2/x402/discovery/resources</code>.
         </p>
       </header>
 
@@ -67,6 +80,8 @@ export default function X402RegistryPage() {
           discovery manifest at <code className="font-mono text-sm">/.well-known/x402</code>. We crawl that.
           Every publisher self-publishes their own data; we surface it normalized and dated. The
           canonical source of truth is the publisher&apos;s manifest, not a maintainer&apos;s taste.
+          What we give up for that is breadth: a readme can name hundreds of projects from hearsay,
+          while this page only shows domains we actually crawl and can date.
         </p>
         <ul className="space-y-2 text-sm text-text-secondary mt-4">
           <li className="flex gap-3">
@@ -79,7 +94,7 @@ export default function X402RegistryPage() {
           </li>
           <li className="flex gap-3">
             <span className="text-accent-primary shrink-0">&middot;</span>
-            <span><strong className="text-text-primary">Structurally agent-friendly:</strong> an MCP or HTTP agent can list every machine-payable API in the ecosystem with one call.</span>
+            <span><strong className="text-text-primary">Structurally agent-friendly:</strong> one call returns every publisher this registry tracks, already normalized, so an agent does not have to fetch and parse each manifest itself.</span>
           </li>
           <li className="flex gap-3">
             <span className="text-accent-primary shrink-0">&middot;</span>
