@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'nvidia-105b-openai-ohio-guarantee-shipped',
+    title:
+      'The $250B Nvidia Guarantee Talks Shipped as $105B. The Shadow Bank Now Has a Signed Contract.',
+    author: 'Marcus Chen',
+    date: 'August 18, 2026',
+    readTime: '6 min read',
+    description:
+      "On Monday, August 17, 2026, Nvidia, OpenAI, and SoftBank finalized the residual value guaranty behind the 8 gigawatt PORTS-Pike Technology Campus in Pike County, Ohio, and disclosed it through an 8-K the same afternoon. The signed number is up to $105 billion of Nvidia backing on the first 4.25 gigawatts of IT load, with an option on the remaining 3.8 at Nvidia's sole discretion, SB Energy building and operating the site under a 20 year OpenAI lease, a $1.5 billion Nvidia equity check into SB Energy, and exclusive Nvidia AI compute rights across all 8 gigawatts. First capacity comes online in 2028. Inside the numbers table (guaranty ceiling, 4.25 GW guaranteed load, 3.8 GW option, 20 year lease term, $1.5B SB Energy equity, exclusive compute across the full 8 GW, 2028 first capacity, $4.2B SB Energy regional grid commit), what dropped from the July talks (topline down from $250B to $105B, scope from 10 GW to 8 GW, chip financing pulled out of the Ohio number and routed through the separate $500B Apollo-BlackRock-Blackstone-Brookfield-Goldman-KKR platform announced August 10), the residual value guaranty as a specific corporate finance product (no cash out day one, contingent on OpenAI default or insolvency, lets the debt behind the campus price at rates a single-startup-tenant campus could not otherwise clear), the August 10 frame (Ohio is the first publicly disclosed use case of the $500B platform, the two announcements read as one architecture where Nvidia sits alongside third party capital rather than on its own balance sheet, purpose built for financing AI infrastructure at frontier lab scale independent of any single hyperscaler treasury), what repriced (Nvidia's five year CDS was already at a record 82bp after the July leak and moved a few basis points wider on Monday, though well inside the July jump, and the stock closed roughly flat since the disclosure gave equity desks something concrete to model, but Nvidia five year protection now costs more than Alphabet's on a settled basis), and the vertically integrated shape (Nvidia is the customer of the customer through the guaranty, the shareholder of the landlord through the $1.5B SB Energy check, and the sole silicon vendor on the site through exclusivity, so every dollar SB Energy collects from OpenAI passes through a schedule Nvidia is on both sides of). Three signposts: whether Nvidia exercises the option on the remaining 3.8 GW inside 12 months, whether the second publicly disclosed use of the $500B platform surfaces a non-OpenAI lab, and whether Nvidia's next 10-Q discloses the guaranty as a specific line item under contingent liabilities or buries it in aggregate.",
+  },
+  {
     slug: 'stripe-openrouter-7b-agent-stack-consolidation',
     title:
       'Stripe Bought OpenRouter for $7B. The Billing Rail and the Inference Gateway Are Now One Company.',
