@@ -32,10 +32,34 @@
       "verifiable_via": "Send a malformed request to /api/premium/cost/projection, /api/premium/news/search, /api/premium/compare/models, or /api/premium/whats-new and inspect the receipt. The event will appear at /api/payment/no-charge-stats."
     },
     {
+      "id": "upstream_failure",
+      "description": "If the upstream source a paid endpoint depends on fails or returns nothing usable, the call is not charged. Their outage is not your bill.",
+      "code": "worker/src/index.ts (premiumResponse with the upstream_failure reason), used across the endpoints that proxy or derive from third-party sources",
+      "verifiable_via": "/api/payment/no-charge-stats and the no_charge_reason field in the signed receipt"
+    },
+    {
       "id": "stale_data",
       "description": "If the underlying data is older than the endpoint's published freshness SLA, the call is not charged. Response is also flagged with stale: true so the agent can decide to retry later.",
       "code": "worker/src/freshness.ts + worker/src/index.ts (premiumResponse)",
       "verifiable_via": "/api/payment/no-charge-stats and the freshness_sla_seconds field in every receipt"
+    },
+    {
+      "id": "empty_result",
+      "description": "If we hold no records for the window or key you asked for, the call is not charged. You still get the response shape plus the coverage we do have, so the next request can be aimed correctly.",
+      "code": "worker/src/index.ts (premiumResponse with the empty_result reason)",
+      "verifiable_via": "/api/payment/no-charge-stats and the no_charge_reason field in the signed receipt"
+    },
+    {
+      "id": "no_new_since_cursor",
+      "description": "If you pass a delta cursor and nothing has changed since your mark, the call is not charged. Polling for changes that have not happened is free.",
+      "code": "worker/src/delta-cursor.ts + worker/src/index.ts (premiumResponse)",
+      "verifiable_via": "/api/payment/no-charge-stats and the no_charge_reason field in the signed receipt"
+    },
+    {
+      "id": "known_data_defect",
+      "description": "If the window you asked for resolves entirely to records we have identified as wrong, the call is not charged. Distinct from empty_result, where we hold nothing, and from stale_data, where we hold something merely older than the SLA: here we hold records and know they are artifacts, so the response explains the defect instead of billing for it.",
+      "code": "worker/src/x402-reg-series.ts (isWindowAllCrawlerDefect) + worker/src/index.ts (premiumResponse with the known_data_defect reason)",
+      "verifiable_via": "/api/payment/no-charge-stats, the no_charge_reason field in the signed receipt, and the data_quality block in the response payload"
     }
   ],
   "freshness_slas": "Published live at https://tensorfeed.ai/api/meta -> agent_fair_trade.freshness_slas",
@@ -45,7 +69,10 @@
     "curve": "Ed25519",
     "canonical_form": "tensorfeed-canonical-json-v1",
     "schema_version_current": 2,
-    "schema_versions_supported": [1, 2],
+    "schema_versions_supported": [
+      1,
+      2
+    ],
     "public_key_url": "https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json",
     "verify_endpoint": "https://tensorfeed.ai/api/receipt/verify",
     "verify_doc": "https://tensorfeed.ai/agent-fair-trade#receipts",
@@ -152,12 +179,15 @@
       "current_federation": [
         {
           "host": "tensorfeed.ai",
-          "members": ["tensorfeed.ai", "terminalfeed.io"],
+          "members": [
+            "tensorfeed.ai",
+            "terminalfeed.io"
+          ],
           "established": "2026-04-30",
           "note": "First AFTA federation. TerminalFeed accepts TensorFeed bearer tokens via the cross-Worker validate + commit rail. Single ledger on tensorfeed.ai. Each site signs its own receipts with its own keypair."
         }
       ]
     }
   },
-  "lastUpdated": "2026-05-05"
+  "lastUpdated": "2026-08-18"
 }

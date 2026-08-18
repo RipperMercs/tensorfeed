@@ -479,6 +479,7 @@ import {
 import {
   getX402RegSeries,
   resolveRange as resolveX402RegRange,
+  isWindowAllCrawlerDefect,
   MAX_RANGE_DAYS as X402REG_MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS as X402REG_DEFAULT_RANGE_DAYS,
 } from './x402-reg-series';
@@ -5201,7 +5202,7 @@ export default {
           premiumResearchLabProductivity: '/api/premium/research/lab-productivity?window=&affiliation_type=&limit= (1 credit; top labs by paper count over 30d/90d/365d windows, derived from TF normalized affiliations on the offline Qwen extraction. Filter by window (30d|90d|365d, default returns all three) and affiliation_type (industry|academia|government|nonprofit|mixed). arXiv has no native concept of normalized lab attribution.)',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           premiumOpenRouterSeries: '/api/premium/openrouter/series?from=&to= (1 credit; daily OpenRouter cross-provider catalog drift over a 90-day window: model count, cheapest paid input/output USD-per-million floor, free-tier count, namespace breadth, plus day-over-day model add/remove churn and per-model price-change counts. OpenRouter serves only current state, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.)',
-          premiumX402RegistrySeries: '/api/premium/x402-registry/series?from=&to= (1 credit; daily x402 publisher-registry drift over a 90-day window: reachable vs erroring publishers, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added/removed, status flips, and payment-wallet changes. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90. Data-quality disclosure: snapshots captured on or before 2026-08-18 came from a crawler that read only /.well-known/x402 and therefore recorded 0 reachable publishers for the entire life of the registry up to that point; those days are flagged crawler_defect in the response and should be read as unmeasured, not zero.)',
+          premiumX402RegistrySeries: '/api/premium/x402-registry/series?from=&to= (1 credit; daily x402 publisher-registry drift over a 90-day window: reachable vs erroring publishers, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added/removed, status flips, and payment-wallet changes. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90. Data-quality disclosure: snapshots captured on or before 2026-08-18 came from a crawler that read only /.well-known/x402 and therefore recorded 0 reachable publishers for the entire life of the registry up to that point; those days are flagged crawler_defect in the response and should be read as unmeasured, not zero. An all-defect window is not charged: the response carries no_charge_reason known_data_defect with credits_charged 0.)',
           premiumHFVelocity: '/api/premium/hf/velocity?from=&to= (1 credit; daily Hugging Face download-velocity over a 90-day window: per-day top models and datasets by download delta and top Spaces by likes delta among the daily top-30, top-set entered/exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled. Default 30 days, max 90.)',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
@@ -5280,7 +5281,11 @@ export default {
         },
         agent_fair_trade: {
           description: 'Agent Fair-Trade Agreement (AFTA): code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, public on-chain payment rail (USDC on Base). Combined: every dollar that flows through TensorFeed has two independent attestations (the Base RPC tx record, immutable and public, and our signed receipt, verifiable and non-forgeable).',
-          no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'upstream_failure', 'stale_data', 'empty_result'],
+          // Keep this in sync with no_charge_guarantees in
+          // public/.well-known/agent-fair-trade.json and the NoChargeReason
+          // union in receipts.ts. All three had drifted apart by 2026-08-18:
+          // the declaration listed 4, this listed 6, the code honored 8.
+          no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'upstream_failure', 'stale_data', 'empty_result', 'no_new_since_cursor', 'known_data_defect'],
           receipts: receiptStatus(env),
           freshness_slas: describeSLAs(),
           freshness_manifest: '/api/freshness',
@@ -11363,6 +11368,14 @@ export default {
       // range, so key on whether any point carries data, not points.length.
       if (!result.points.some((p) => p.has_data)) {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
+      // AFTA known_data_defect no-charge: the window has captured days, but
+      // every one of them predates the 2026-08-18 crawler fix and recorded 0
+      // reachable publishers, so there is no usable observation in it. The
+      // payload still carries the full series plus the data_quality block
+      // explaining why; we just do not bill for records we know are wrong.
+      if (isWindowAllCrawlerDefect(result)) {
+        return await premiumResponse(result, payment, 1, request, env, 'known_data_defect');
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
