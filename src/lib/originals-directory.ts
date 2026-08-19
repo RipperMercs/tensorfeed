@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'fasb-stablecoin-cash-equivalent-agent-payments',
+    title:
+      'FASB Proposed Three Tests That Turn USDC Into Cash on the Balance Sheet. Agent Payments Just Got Its Accounting Bridge.',
+    author: 'Adrian Vale',
+    date: 'August 19, 2026',
+    readTime: '6 min read',
+    description:
+      "On Tuesday, August 18, 2026, the Financial Accounting Standards Board proposed guidance that lets certain stablecoins sit under the cash and cash equivalents line on a US GAAP balance sheet, with public comments open until November 19. Three tests to qualify: direct on-demand issuer redemption at par within one business day, at least one-to-one segregated reserves in short-term highly liquid US-dollar assets (crypto and gold reserves disqualifying), and annual independent audit-grade attestation. Reads through who passes and who does not on the proposal as written (USDC passes cleanly on cash and Treasuries at BNY Mellon with monthly Deloitte attestations and Circle Mint direct redemption; RLUSD and PYUSD likely pass; USDT fails today on commercial paper and secured loans in the reserve, quarterly attestations rather than audits, and gated corporate-only redemption; DAI, FRAX, and USDe are structurally excluded), what actually changes on the balance sheet (from intangible digital asset under ASU 2023-08 with fair-value adjustments hitting the income statement to plain cash and cash equivalents alongside money-market funds and 30-day T-bills, no separate footnote), and why this is the accounting layer agent payments has been quietly missing (Coinbase reports 169 million x402 payments across 590,000 buyers and 100,000 sellers in the protocol's first year, Cloudflare and AWS both wired x402 into their edge networks in July, and AFTA settlement runs USDC on Base, but the bottleneck was never technical, it was the CFO conversation where a $200,000 operational float in USDC had to be booked under intangibles and explained in the audit). The structural split it forces (a US corporate treasurer choosing which stablecoin to hold operationally now has an accounting-based reason to prefer USDC, which is a demand floor for Circle and for payment rails that route USDC natively, and Tether has an obvious 90-day incentive to reallocate reserves into T-bills and commission a real audit or accept a two-tier stablecoin market), and two caveats (the proposal is not a final rule and could shift in the comment period; classification as a cash equivalent is not the same as OCC, SEC, or CFTC regulatory approval, and the Clarity Act is still stalled). Three signposts: whether Tether reallocates and audits before November 19, whether any Big Four firm publishes interpretive guidance ahead of the final rule with Deloitte the natural first mover as Circle's attestation partner, and whether Coinbase or Stripe prices an enterprise-facing USDC treasury product packaging cash-equivalent classification as the pitch inside 60 days.",
+  },
+  {
     slug: 'nvidia-105b-openai-ohio-guarantee-shipped',
     title:
       'The $250B Nvidia Guarantee Talks Shipped as $105B. The Shadow Bank Now Has a Signed Contract.',
