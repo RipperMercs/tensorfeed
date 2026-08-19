@@ -16,9 +16,18 @@ describe.skipIf(SKIP_LIVE)('publisher manifest live crawl', () => {
 describe.skipIf(SKIP_LIVE)('Base RPC live USDC Transfer scan', () => {
   it('fetches a recent block range and returns USDC Transfer logs', async () => {
     // Sanity check: hit Base mainnet for eth_blockNumber, then fetch logs
-    // from a recent ~70-block window. Base USDC has constant volume so we
-    // expect Transfer events; we just need at least one for the test to
-    // confirm the RPC plumbing works end-to-end.
+    // from a recent short window. Base USDC has constant volume so we expect
+    // Transfer events; we just need at least one to confirm the RPC plumbing
+    // works end-to-end.
+    //
+    // Window sized down from 70 blocks to 5 on 2026-08-18. Base's public RPC
+    // caps response size and answers a 70-block USDC Transfer query with
+    // -32020 "backend response too large", so `result` came back undefined
+    // and the Array.isArray assertion failed as a bare "expected false to be
+    // true". Whether it tripped depended on USDC volume in that window, so it
+    // passed and failed in the same session. Measured the same hour: 70 blocks
+    // errors, 20 blocks returns ~3,011 logs, 5 blocks returns ~638. Five is
+    // far under the cap and still proves the plumbing.
     const blockNumberRes = await fetch('https://mainnet.base.org', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,14 +46,17 @@ describe.skipIf(SKIP_LIVE)('Base RPC live USDC Transfer scan', () => {
         params: [{
           address: USDC_BASE_CONTRACT,
           topics: [TRANSFER_TOPIC],
-          fromBlock: '0x' + (current - 100).toString(16),
+          fromBlock: '0x' + (current - 34).toString(16),
           toBlock: '0x' + (current - 30).toString(16),
         }],
         id: 1,
       }),
     });
-    const logsData = (await logsRes.json()) as { result: RpcLog[] };
+    // Surface an RPC-side error as itself rather than as a confusing
+    // "expected false to be true" on the isArray assertion below.
+    const logsData = (await logsRes.json()) as { result?: RpcLog[]; error?: { code: number; message: string } };
+    expect(logsData.error, `Base RPC returned an error instead of logs: ${JSON.stringify(logsData.error)}`).toBeUndefined();
     expect(Array.isArray(logsData.result)).toBe(true);
-    expect(logsData.result.length).toBeGreaterThan(0);
+    expect(logsData.result!.length).toBeGreaterThan(0);
   }, 30_000);
 });
