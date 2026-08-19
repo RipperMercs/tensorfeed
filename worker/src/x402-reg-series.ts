@@ -332,6 +332,20 @@ export function projectX402RegSeries(
 }
 
 /**
+ * True when every captured day in the window came from the pre-fix crawler
+ * defect, i.e. the caller would be paying for records we already know are
+ * artifacts. The route turns this into an AFTA no-charge rather than
+ * billing a credit for a window with no usable observation in it.
+ *
+ * Deliberately requires at least one captured day: a window with NO
+ * snapshots at all is the existing empty_result case and is checked first,
+ * so the two no-charge paths stay distinguishable in the receipt.
+ */
+export function isWindowAllCrawlerDefect(result: X402RegSeriesResult): boolean {
+  return result.data_quality.defect_days_in_window > 0 && result.data_quality.usable_days_in_window === 0;
+}
+
+/**
  * Thin env-bound reader. Reads x402-reg:daily:{date} for each date in
  * range (missing day reads as null) then defers all logic to the pure
  * projector.

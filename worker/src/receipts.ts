@@ -32,6 +32,18 @@ export type NoChargeReason =
   | 'free_trial'
   | 'no_new_since_cursor'
   | 'empty_result'
+  /**
+   * The window resolved entirely to data we know is wrong. Distinct from
+   * empty_result (we hold nothing) and stale_data (we hold something older
+   * than the SLA): here we hold records and have identified them as
+   * unusable, so charging for them would be selling a known artifact.
+   * First use: an x402-registry series window falling entirely inside the
+   * pre-2026-08-18 crawler defect. Additive to the union and carried as an
+   * opaque string into the receipt; nothing switches on these values, and
+   * the published AFTA schema types no_charge_reason as a free-form string
+   * rather than a closed enum, so external verifiers keep validating.
+   */
+  | 'known_data_defect'
   | null;
 
 /**

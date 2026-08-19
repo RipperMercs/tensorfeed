@@ -5,6 +5,7 @@ import {
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
   CRAWLER_DEFECT_THROUGH,
+  isWindowAllCrawlerDefect,
 } from './x402-reg-series';
 import {
   X402_REGISTRY_ATTRIBUTION,
@@ -263,5 +264,53 @@ describe('crawler-defect disclosure', () => {
     expect(r.points[0].has_data).toBe(false);
     expect(r.points[1].crawler_defect).toBe(true);
     expect(r.data_quality.defect_days_in_window).toBe(1);
+  });
+});
+
+describe('isWindowAllCrawlerDefect', () => {
+  const broken = (date: string) =>
+    snap(date, [
+      entry('tensorfeed.ai', { status: 'invalid_schema', federation_member: true }),
+      entry('terminalfeed.io', { status: 'not_found', federation_member: true }),
+    ]);
+  const healthy = (date: string) =>
+    snap(date, [
+      entry('tensorfeed.ai', { status: 'ok', federation_member: true }),
+      entry('terminalfeed.io', { status: 'ok', federation_member: true }),
+    ]);
+
+  it('is true when every captured day is defective, so the route does not bill', () => {
+    const r = projectX402RegSeries('2026-06-01', '2026-06-03', [
+      { date: '2026-06-01', snap: broken('2026-06-01') },
+      { date: '2026-06-02', snap: null },
+      { date: '2026-06-03', snap: broken('2026-06-03') },
+    ]);
+    expect(isWindowAllCrawlerDefect(r)).toBe(true);
+  });
+
+  it('is false as soon as one usable day is present', () => {
+    const r = projectX402RegSeries('2026-08-17', '2026-08-19', [
+      { date: '2026-08-17', snap: broken('2026-08-17') },
+      { date: '2026-08-19', snap: healthy('2026-08-19') },
+    ]);
+    expect(isWindowAllCrawlerDefect(r)).toBe(false);
+  });
+
+  it('is false for an all-post-fix window', () => {
+    const r = projectX402RegSeries('2026-08-19', '2026-08-19', [
+      { date: '2026-08-19', snap: healthy('2026-08-19') },
+    ]);
+    expect(isWindowAllCrawlerDefect(r)).toBe(false);
+  });
+
+  it('is false when the window holds no snapshots at all, which is the empty_result case', () => {
+    // The route checks empty_result FIRST, so this must not also report as a
+    // defect window or the receipt would carry the wrong no_charge_reason.
+    const r = projectX402RegSeries('2026-06-01', '2026-06-02', [
+      { date: '2026-06-01', snap: null },
+      { date: '2026-06-02', snap: null },
+    ]);
+    expect(r.points.some((p) => p.has_data)).toBe(false);
+    expect(isWindowAllCrawlerDefect(r)).toBe(false);
   });
 });

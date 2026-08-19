@@ -3934,6 +3934,11 @@ async function logNoChargeEvent(
  * AFTA commit phase. Called by premiumResponse() after the handler
  * returns. Honors the published no-charge guarantees:
  *
+ * The mechanism is generic: ANY non-null noChargeReason returns
+ * creditsCharged 0 and logs the event to the public no-charge ledger, so
+ * adding a reason to the union in receipts.ts is enough to honor it here.
+ * The reasons in use:
+ *
  *   - 5xx                          -> no charge
  *   - circuit_breaker              -> no charge (already handled in
  *                                     requirePayment, but re-checked here
@@ -3942,6 +3947,15 @@ async function logNoChargeEvent(
  *   - stale_data                   -> no charge, response is also
  *                                     flagged with stale: true so the
  *                                     agent knows to retry later
+ *   - empty_result                 -> no charge, we hold nothing for the
+ *                                     requested window or key
+ *   - no_new_since_cursor          -> no charge, the delta cursor found
+ *                                     nothing new since the caller's mark
+ *   - known_data_defect            -> no charge, we hold records for the
+ *                                     window but have identified them as
+ *                                     wrong, so selling them would be
+ *                                     selling a known artifact
+ *   - free_trial                   -> no charge, no token to debit
  *
  * Idempotent on the no-charge path. Race condition note: between
  * requirePayment and commitPayment another request can clear the
