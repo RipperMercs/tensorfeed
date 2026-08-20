@@ -8808,7 +8808,7 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
-      // Policy (Evan, 2026-07-09): a batch-unavailable all-UNKNOWN answer
+      // Policy (operator, 2026-07-09): a batch-unavailable all-UNKNOWN answer
       // still charges as-is (honestly disclosed "cannot assess"). Do not
       // wire batch_available into a no-charge here without a new ruling.
       return await premiumResponse(result, payment, 1, request, env);
@@ -8907,7 +8907,7 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet, payment),
       );
-      // Policy (Evan, 2026-07-09): batch-unavailable charges as-is, same as
+      // Policy (operator, 2026-07-09): batch-unavailable charges as-is, same as
       // stack-safety-verdict above. batch_available is surfaced in the body
       // so the caller can see why everything is UNKNOWN.
       const body = { ...result, cursor: freshCursor, continuation };
@@ -17022,7 +17022,7 @@ export default {
       await run('sendDailySummary', () => sendDailySummary(env));
     } else if (cron === '0 15 * * *') {
       // Daily 15:00 UTC (08:00 America/Los_Angeles during PDT, 07:00
-      // during PST: the accepted seasonal drift). Email evan@tensorfeed.ai
+      // during PST: the accepted seasonal drift). Email legal@tensorfeed.ai
       // a digest of agent-work gig listings posted to the public jobs
       // board in the last 24 hours. No email on a zero-activity day; the
       // cron-status log is the heartbeat. Read-only over jobs:gig:* KV
@@ -17072,7 +17072,7 @@ export default {
       // full_name, scored by signal_weight * recency + log10(stars).
       // Daily snapshot keyed under opps:daily:{date}. Backs free
       // /api/agents/opportunities. After capture, diff against
-      // yesterday's snapshot and email evan@tensorfeed.ai if any new
+      // yesterday's snapshot and email legal@tensorfeed.ai if any new
       // alert-worthy repos showed up (high-value-signal orgs always,
       // keyword sweeps gated at 100+ stars).
       await run('captureAgentOpportunities', async () => {

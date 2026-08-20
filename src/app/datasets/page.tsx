@@ -59,7 +59,7 @@ const DATASET_JSONLD = {
   },
   publisher: {
     '@type': 'Organization',
-    name: 'Pizza Robot Studios LLC',
+    name: 'TensorFeed.ai',
     url: 'https://tensorfeed.ai',
   },
   license: 'https://tensorfeed.ai/agent-fair-trade',

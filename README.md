@@ -157,4 +157,4 @@ MIT. See `LICENSE`. Premium API responses ship under an inference-only license (
 - feedback@tensorfeed.ai
 - Bug reports: [GitHub issues](https://github.com/RipperMercs/tensorfeed/issues)
 
-A [Pizza Robot Studios](https://pizzarobotstudios.com) project.
+An independent project. Legal and formal notice: legal@tensorfeed.ai

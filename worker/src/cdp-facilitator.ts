@@ -16,7 +16,7 @@
  *      Wallet, Onramp, or other CDP API surfaces.
  *   3. Only this module imports CDP_API_KEY_ID / CDP_API_KEY_SECRET.
  *   4. Key material is never logged, returned, or included in errors.
- *   5. The key is tied to Evan's personal Coinbase account; treat
+ *   5. The key is tied to the operator's personal Coinbase account; treat
  *      with extreme care.
  *
  * JWT spec captured 2026-05-14 from @coinbase/cdp-sdk@1.49.2 auth/utils/jwt.ts.
@@ -38,7 +38,7 @@ import type {
 
 // Hardcoded. The ONE base URL this module ever fetches. Any change here
 // would broaden the blast radius of the CDP key; require explicit memory
-// update + Evan sign-off before touching.
+// update + operator sign-off before touching.
 const CDP_BASE_URL = 'https://api.cdp.coinbase.com/platform/v2/x402';
 const CDP_HOST = 'api.cdp.coinbase.com';
 const CDP_BASE_PATH = '/platform/v2/x402';

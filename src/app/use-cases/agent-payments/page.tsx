@@ -41,7 +41,7 @@ const FAQ_JSONLD = {
       name: 'How does cross-site agent payment work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The TensorFeed Worker exposes /api/internal/validate-and-charge (server-to-server only, X-Internal-Auth gated) so a sister-site Worker can validate a TensorFeed bearer token and decrement credits over HTTP. This is the contract that powers the cross-site bundle: an agent buys credits once on TensorFeed, then spends them on TerminalFeed.io premium endpoints (and any future sister-site Pizza Robot Studios product). One purchase, multiple sites.',
+        text: 'The TensorFeed Worker exposes /api/internal/validate-and-charge (server-to-server only, X-Internal-Auth gated) so a sister-site Worker can validate a TensorFeed bearer token and decrement credits over HTTP. This is the contract that powers the cross-site bundle: an agent buys credits once on TensorFeed, then spends them on TerminalFeed.io premium endpoints (and any future sister-site product). One purchase, multiple sites.',
       },
     },
     {
@@ -170,7 +170,7 @@ curl https://tensorfeed.ai/api/premium/routing?task=code \\
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Cross-site bundle</h2>
         <p>
           TensorFeed exposes <code className="text-accent-primary font-mono">/api/internal/validate-and-charge</code>{' '}
-          so sister-site Workers (TerminalFeed.io today, future Pizza Robot Studios products
+          so sister-site Workers (TerminalFeed.io today, future sister-site products
           tomorrow) can validate the same bearer token and debit credits over HTTP. Server-to-
           server only, gated by an X-Internal-Auth shared secret, never exposed to agents
           directly. The result: agents buy credits once, spend them on either site. The
@@ -184,7 +184,7 @@ curl https://tensorfeed.ai/api/premium/routing?task=code \\
         </p>
         <ul className="space-y-1 list-disc list-inside ml-4">
           <li><Link href="/llms.txt" className="text-accent-primary hover:underline">/llms.txt</Link></li>
-          <li><a href="https://tensorfeed.ai/api/payment/info" className="text-accent-primary hover:underline">/api/payment/info</a> (also lists the operator: Pizza Robot Studios LLC, California, USA)</li>
+          <li><a href="https://tensorfeed.ai/api/payment/info" className="text-accent-primary hover:underline">/api/payment/info</a> (also lists the operator: TensorFeed.ai, California, USA)</li>
           <li><a href="https://github.com/RipperMercs/tensorfeed" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">GitHub README</a></li>
           <li><a href="https://x.com/tensorfeed" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">@tensorfeed bio on X</a></li>
         </ul>

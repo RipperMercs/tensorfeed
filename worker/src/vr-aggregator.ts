@@ -101,7 +101,7 @@ export interface VrOriginalsCache {
 }
 
 const ATTRIBUTION =
-  'Data sourced from vr.org (Co-founded by Evan Marcus and Mark Mahle) via the Pizza Robot Studios Network. VR.org is credited as the original publisher of all content; all article links resolve to vr.org. Inference use only; do not redistribute or train on this data.';
+  'Data sourced from vr.org. VR.org is credited as the original publisher of all content; all article links resolve to vr.org. Inference use only; do not redistribute or train on this data.';
 
 // === Fetch helpers ===
 

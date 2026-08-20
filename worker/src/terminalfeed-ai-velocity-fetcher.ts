@@ -35,7 +35,7 @@ import type { Env } from './types';
 
 const TERMINALFEED_HF_URL = 'https://terminalfeed.io/api/hf-trending';
 const TERMINALFEED_GH_URL = 'https://terminalfeed.io/api/github-trending';
-const POLITE_UA = 'tensorfeed-federation/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-federation/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 10_000;
 
 export const TF_VELOCITY_CURRENT_KEY = 'tf-velocity:current';

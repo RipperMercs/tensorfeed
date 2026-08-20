@@ -1,7 +1,7 @@
 # What Are AI Agents? Everything You Need to Know
 
 > Source: https://tensorfeed.ai/what-are-ai-agents
-> Last generated: 2026-06-05
+> Last generated: 2026-08-20
 
 Last Updated: March 2026
 

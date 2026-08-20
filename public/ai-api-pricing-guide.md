@@ -1,15 +1,16 @@
 # AI API Pricing Guide: Every Provider Compared
 
 > Source: https://tensorfeed.ai/ai-api-pricing-guide
-> Last generated: 2026-06-05
+> Last generated: 2026-08-20
 
-Last Updated: March 2026
+Last Updated: June 2026
 
       # 
         AI API Pricing Guide: Every Provider Compared
-          AI API pricing in 2026 ranges from free open-source models to $75 per million tokens for
-          premium models like Claude Opus. Most developers spend between $0.10 and $15 per million
-          input tokens depending on the model tier and use case.
+          AI API pricing in 2026 ranges from free open-source models to around $60 per million
+          output tokens for premium reasoning models. The current flagship Claude Opus 5 runs $5
+          input and $25 output per million tokens. Most developers spend between $0.10 and $15 per
+          million input tokens depending on the model tier and use case.
         AI API pricing can be confusing. Every provider uses slightly different units, some charge
         differently for input and output tokens, and prices change frequently. This guide breaks
         it all down in one place, with real cost examples so you can estimate what your project
@@ -41,10 +42,10 @@ Last Updated: March 2026
                     | Total/month 
                   |
 
-                    | Claude Opus 4.7 
-                    | $300.00 
-                    | $750.00 
-                    | $1,050.00 
+                    | Claude Opus 4.8 
+                    | $100.00 
+                    | $250.00 
+                    | $350.00 
                   |
 
                     | Claude Sonnet 4.6 
@@ -77,7 +78,7 @@ Last Updated: March 2026
                     | $6.00 
                   |
 
-              The takeaway: there is a 175x cost difference between the most expensive and cheapest
+              The takeaway: there is a 58x cost difference between the most expensive and cheapest
               options for the same workload. Choosing the right model matters enormously.
             ### 
               Example 2: Document Summarization (1,000 documents/month)
@@ -87,8 +88,8 @@ Last Updated: March 2026
                     | Total/month 
                   |
 
-                    | Claude Opus 4.7 
-                    | $187.50 
+                    | Claude Opus 4.8 
+                    | $62.50 
                   |
 
                     | Gemini 2.5 Pro 
@@ -228,7 +229,7 @@ Last Updated: March 2026
                 | $0.0005 
               |
 
-          Frontier model = Claude Opus 4.7 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
+          Frontier tier = premium reasoning models (o1-class). Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
         ## Tips for Reducing API Costs
           API costs can add up quickly, especially at scale. Here are practical strategies for
           keeping them under control:

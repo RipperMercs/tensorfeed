@@ -135,7 +135,7 @@ export default function AboutPage() {
         </div>
         <div className="space-y-4 text-text-secondary leading-relaxed">
           <p>
-            TensorFeed was founded in March 2026 by Evan, a software engineer and
+            TensorFeed was founded in March 2026 by a software engineer and
             entrepreneur with over a decade of experience building web applications, real-time data
             systems, and developer tools. The project grew out of a personal frustration: keeping up
             with AI news required checking too many sources every day, and none of them served both
@@ -149,9 +149,9 @@ export default function AboutPage() {
             and technology journalism.
           </p>
           <p>
-            TensorFeed is operated by Pizza Robot Studios LLC, based in Los Angeles, California.
-            We are an independent publication with no venture capital funding, no investor
-            obligations, and no editorial conflicts. Our opinions are our own.
+            TensorFeed.ai is an independent publication with no venture capital funding, no
+            investor obligations, and no editorial conflicts. Our opinions are our own. Legal and
+            formal notice: legal@tensorfeed.ai.
           </p>
         </div>
       </section>

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pizza Robot Studios pre-commit hook: block commits that look like they
+# Pre-commit hook: block commits that look like they
 # contain API keys. Mandated by the global CLAUDE.md. Patterns cover the
 # providers we use; expand here if a new provider is added to the stack.
 #

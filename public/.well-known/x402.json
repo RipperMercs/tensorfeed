@@ -28,11 +28,11 @@
   "docs": "https://tensorfeed.ai/developers/agent-payments",
   "llmsTxt": "https://tensorfeed.ai/llms.txt",
   "operator": {
-   "legalEntity": "Pizza Robot Studios LLC",
+   "legalEntity": "TensorFeed.ai",
    "jurisdiction": "California, USA",
    "terms": "https://tensorfeed.ai/terms",
    "privacy": "https://tensorfeed.ai/privacy",
-   "note": "Pizza Robot Studios LLC is the legal entity behind the payment wallet. Premium credits are non-refundable per Section 17.5 of the Terms of Service."
+   "note": "TensorFeed.ai is the legal entity behind the payment wallet. Premium credits are non-refundable per Section 17.5 of the Terms of Service."
   },
   "validation": {
    "method": "TLS + multi-publication",

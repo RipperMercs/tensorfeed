@@ -26,7 +26,7 @@ const DATASETS_SERVER = 'https://datasets-server.huggingface.co';
 const PAGE_SIZE = 100;
 const MAX_PAGES = 60; // 6000 rows cap; current leaderboard is ~2-3k
 const FETCH_TIMEOUT_MS = 30_000;
-const POLITE_UA = 'tensorfeed/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 
 const KV_LATEST = 'hf-leaderboard:latest';
 const KV_DATE_PREFIX = 'hf-leaderboard:date:';

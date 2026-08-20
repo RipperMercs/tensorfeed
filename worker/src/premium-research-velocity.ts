@@ -37,7 +37,7 @@ import { Env } from './types';
 
 const OPENALEX_BASE = 'https://api.openalex.org';
 const AI_CONCEPT_ID = 'C154945302';
-const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 15_000;
 
 const BASELINE_KEY = 'openalex-ai-institutions:current';

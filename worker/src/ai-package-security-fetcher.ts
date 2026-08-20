@@ -31,7 +31,7 @@ import { CURATED_PYPI_PACKAGES } from './pypi-ai-packages';
 import { CURATED_PACKAGES as CURATED_NPM_PACKAGES } from './npm-ai-packages';
 
 const OSV_QUERY_URL = 'https://api.osv.dev/v1/query';
-const POLITE_UA = 'tensorfeed-security/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-security/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 15_000;
 
 export const AI_PKG_SEC_CURRENT_KEY = 'ai-pkg-sec:current';

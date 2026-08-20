@@ -1365,7 +1365,7 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
     agent_fair_trade:
       'TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.',
     operator: {
-      legal_entity: 'Pizza Robot Studios LLC',
+      legal_entity: 'TensorFeed.ai',
       jurisdiction: 'California, USA',
       contact: 'contact@tensorfeed.ai',
       note: 'The legal entity behind the payment wallet. Premium credits are non-refundable per Section 17.5 of the Terms of Service at https://tensorfeed.ai/terms.',

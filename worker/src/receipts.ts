@@ -10,7 +10,7 @@ import { Env } from './types';
  * independent attestations: the Base RPC tx record (immutable, public)
  * and our signed receipt (verifiable, non-forgeable).
  *
- * Bootstrap: Evan generates a fresh keypair offline with
+ * Bootstrap: the operator generates a fresh keypair offline with
  * `worker/scripts/generate-receipt-key.mjs`, pastes the private JWK
  * into `wrangler secret put RECEIPT_PRIVATE_KEY_JWK`, and replaces
  * `public/.well-known/tensorfeed-receipt-key.json` with the public JWK.

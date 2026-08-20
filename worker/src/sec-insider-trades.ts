@@ -22,7 +22,7 @@
 import type { Env } from './types';
 import { AI_BELLWETHERS, type AIBellwether } from './sec-filings-fetcher';
 
-const EDGAR_USER_AGENT = 'TensorFeed evan@tensorfeed.ai';
+const EDGAR_USER_AGENT = 'TensorFeed legal@tensorfeed.ai';
 const EDGAR_FETCH_TIMEOUT_MS = 15_000;
 const INSIDER_KV_PREFIX = 'sec:insider-trades:';
 const INSIDER_KV_TTL_SECONDS = 6 * 60 * 60;

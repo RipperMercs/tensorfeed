@@ -164,8 +164,8 @@ export default function WhyWeBuiltTensorFeedPage() {
         <h2 className="text-2xl font-semibold text-text-primary pt-4">The TerminalFeed Connection</h2>
 
         <p>
-          TensorFeed isn&apos;t a standalone project. It&apos;s part of a family of sites I&apos;m building
-          under Pizza Robot Studios.{' '}
+          TensorFeed isn&apos;t a standalone project. It&apos;s part of a family of sites I&apos;m
+          building.{' '}
           <a href="https://terminalfeed.io" className="text-accent-primary hover:underline" target="_blank" rel="noopener noreferrer">
             TerminalFeed.io
           </a>{' '}

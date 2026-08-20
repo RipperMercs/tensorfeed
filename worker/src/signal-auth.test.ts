@@ -49,8 +49,8 @@ async function craftToken(secret: string, email: string, expMs: number): Promise
 }
 
 const SALT_HEX = '00112233445566778899aabbccddeeff';
-const PASSWORD = 'correct horse battery staple pizza-robot';
-const EMAIL = 'evan@tensorfeed.ai';
+const PASSWORD = 'correct horse battery staple tensorfeed';
+const EMAIL = 'legal@tensorfeed.ai';
 const SECRET = 'a'.repeat(32); // >= 16 chars
 let USERS = '';
 
@@ -64,7 +64,7 @@ describe('verifyCredentials', () => {
     expect(await verifyCredentials(USERS, EMAIL, PASSWORD)).toBe(true);
   });
   it('is email case-insensitive', async () => {
-    expect(await verifyCredentials(USERS, 'EVAN@TensorFeed.ai', PASSWORD)).toBe(true);
+    expect(await verifyCredentials(USERS, 'LEGAL@TensorFeed.ai', PASSWORD)).toBe(true);
   });
   it('rejects a wrong password', async () => {
     expect(await verifyCredentials(USERS, EMAIL, 'wrong password')).toBe(false);

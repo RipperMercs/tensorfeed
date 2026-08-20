@@ -33,7 +33,7 @@
 import type { Env } from './types';
 
 const SUBMISSIONS_URL_BASE = 'https://data.sec.gov/submissions/';
-const SEC_USER_AGENT = 'TensorFeed evan@tensorfeed.ai';
+const SEC_USER_AGENT = 'TensorFeed legal@tensorfeed.ai';
 const FETCH_TIMEOUT_MS = 20_000;
 const PER_COMPANY_RECENT_CAP = 25;
 const COHORT_RECENT_CAP = 100;

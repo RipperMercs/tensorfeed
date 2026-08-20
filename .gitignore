@@ -75,7 +75,7 @@ mcp-server/registry/
 # artifact, never source.
 .playwright-mcp/
 
-# Internal-only docs (Pizza Robot Studios public-repo policy).
+# Internal-only docs (public-repo policy).
 # Public-facing READMEs and CHANGELOGs are still tracked; these
 # leak internal strategy / architecture / maintainer-only ops, so they
 # live locally only.

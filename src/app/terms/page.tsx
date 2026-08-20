@@ -39,9 +39,8 @@ export default function TermsPage() {
             Welcome to TensorFeed.ai. By accessing or using our website at tensorfeed.ai (the
             &quot;Site&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;). If
             you do not agree to these Terms, please do not use the Site. TensorFeed.ai, the Premium
-            API, and all related services are operated by Pizza Robot Studios LLC, a California
-            limited liability company (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). Pizza
-            Robot Studios LLC is the legal entity responsible for the payment wallets at
+            API, and all related services are operated by TensorFeed.ai (&quot;we,&quot; &quot;us,&quot;
+            or &quot;our&quot;). We are the party responsible for the payment wallets at
             <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono mx-1">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</code>
             on Base mainnet and
             <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono mx-1">B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ</code>
@@ -89,11 +88,11 @@ export default function TermsPage() {
           <p className="mb-3">
             Original editorial content published under{' '}
             <Link href="/originals" className="text-accent-primary hover:underline">TensorFeed Originals</Link>{' '}
-            is the property of Pizza Robot Studios LLC. You may quote or reference our original content
+            is the property of TensorFeed.ai. You may quote or reference our original content
             with proper attribution and a link back to the source article.
           </p>
           <p className="mb-3">
-            The TensorFeed name, logo, and site design are the property of Pizza Robot Studios LLC. You
+            The TensorFeed name, logo, and site design are the property of TensorFeed.ai. You
             may not use our branding without prior written permission.
           </p>
           <p>
@@ -216,7 +215,7 @@ export default function TermsPage() {
             <div>
               <h3 className="text-base font-semibold text-text-primary mb-2">17.7 Tax treatment</h3>
               <p>
-                Pizza Robot Studios LLC handles its own taxes. All USDC received is logged at the
+                TensorFeed.ai handles its own taxes. All USDC received is logged at the
                 received-date USD value and reported as ordinary income. We do not issue invoices
                 to agents; the on-chain transaction is the receipt.
               </p>
@@ -226,7 +225,7 @@ export default function TermsPage() {
               <h3 className="text-base font-semibold text-text-primary mb-2">17.8 Cross-site applicability</h3>
               <p>
                 Premium credits and bearer tokens are jointly redeemable on tensorfeed.ai and
-                terminalfeed.io, both operated by Pizza Robot Studios LLC under a single
+                terminalfeed.io, both operated under common control and a single
                 credit-accounting system. TensorFeed is the system of record for credit balances.
                 These Terms, including the Premium API provisions in this Section, apply to all
                 calls made against your bearer token across the cross-site bundle. Where a sister
@@ -379,7 +378,7 @@ export default function TermsPage() {
             <div>
               <h3 className="text-base font-semibold text-text-primary mb-2">17.15 No money services business; sale of own service</h3>
               <p>
-                Pizza Robot Studios LLC is not, and does not hold itself out as, a money services
+                TensorFeed.ai is not, and does not hold itself out as, a money services
                 business, money transmitter, virtual asset service provider, exchange, custodian,
                 broker-dealer, investment adviser, or other financial institution. We accept USDC
                 on Base mainnet and Solana mainnet as payment for our own data and information
@@ -389,7 +388,7 @@ export default function TermsPage() {
                 rail does not change that posture: both rails are inbound payment for our own
                 service, and neither is offered as a transfer, conversion, or bridging service for
                 anyone else. Nothing in these Terms creates any fiduciary, advisory, agency, or
-                banking relationship between you and Pizza Robot Studios LLC.
+                banking relationship between you and TensorFeed.ai.
               </p>
             </div>
 
@@ -625,7 +624,7 @@ export default function TermsPage() {
                 output we publish and sell is a derived work and a compilation: the selection,
                 arrangement, normalization, scoring, weighting, reasoning, verdicts, and
                 presentation are our own contribution, produced by systems we built and maintain,
-                and they are the property of Pizza Robot Studios LLC. We license access to that
+                and they are the property of TensorFeed.ai. We license access to that
                 derived output. We do not license, and do not purport to license, the underlying
                 third-party material itself.
               </p>
@@ -744,7 +743,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-3">Limitation of Liability</h2>
           <p className="mb-3">
-            To the fullest extent permitted by applicable law, Pizza Robot Studios LLC and its operators
+            To the fullest extent permitted by applicable law, TensorFeed.ai and its operators
             shall not be liable for any indirect, incidental, special, consequential, or punitive damages,
             including but not limited to loss of profits, data, or business opportunities, arising from
             your use of or inability to use the Site.
@@ -760,7 +759,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-3">Indemnification</h2>
           <p>
-            You agree to indemnify and hold harmless Pizza Robot Studios LLC, its operators, and
+            You agree to indemnify and hold harmless TensorFeed.ai, its operators, and
             affiliates from any claims, damages, losses, or expenses (including reasonable attorney fees)
             arising from your use of the Site or violation of these Terms.
           </p>
@@ -786,7 +785,7 @@ export default function TermsPage() {
             apply.
           </p>
           <p>
-            You and Pizza Robot Studios LLC agree that any dispute, claim, or proceeding arising
+            You and TensorFeed.ai agree that any dispute, claim, or proceeding arising
             out of or related to these Terms or your use of the Service, including the Premium API
             Tier, shall be brought exclusively in the state or federal courts located in Los
             Angeles County, California, United States, and you irrevocably consent to the personal
@@ -800,7 +799,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-3">Class Action and Jury Trial Waiver</h2>
           <p className="mb-3">
-            To the fullest extent permitted by applicable law, you and Pizza Robot Studios LLC each
+            To the fullest extent permitted by applicable law, you and TensorFeed.ai each
             agree that any dispute will be brought in an individual capacity only, and not as a
             plaintiff or class member in any purported class, collective, consolidated, or
             representative proceeding. No arbitrator or court may consolidate the claims of more
@@ -808,7 +807,7 @@ export default function TermsPage() {
             written consent of both parties.
           </p>
           <p>
-            To the fullest extent permitted by applicable law, you and Pizza Robot Studios LLC each
+            To the fullest extent permitted by applicable law, you and TensorFeed.ai each
             knowingly and voluntarily waive any right to a trial by jury in any action arising out
             of or related to these Terms or your use of the Service. If this waiver is held
             unenforceable in a given proceeding, the remainder of these Terms continues to apply.
@@ -823,7 +822,7 @@ export default function TermsPage() {
               <span className="text-text-primary font-medium">Entire agreement:</span> These Terms,
               together with our Privacy Policy and any terms expressly incorporated by reference
               (including the premium API documentation), constitute the entire agreement between
-              you and Pizza Robot Studios LLC regarding the Service and supersede all prior
+              you and TensorFeed.ai regarding the Service and supersede all prior
               understandings on that subject.
             </li>
             <li>
@@ -914,7 +913,7 @@ export default function TermsPage() {
             <a href="mailto:contact@tensorfeed.ai" className="text-accent-primary hover:underline">
               contact@tensorfeed.ai
             </a>
-            . All addresses reach Pizza Robot Studios LLC, a California limited liability company.
+            . All addresses reach the TensorFeed.ai operator.
           </p>
         </section>
       </div>

@@ -26,7 +26,7 @@
 import type { Env } from './types';
 
 const AVID_REPO = 'avidml/avid-db';
-const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 20_000;
 
 export const AVID_CURRENT_KEY = 'avid:current';

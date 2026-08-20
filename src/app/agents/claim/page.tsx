@@ -589,8 +589,8 @@ function SubmissionOutcome({ result, message }: { result: ClaimResponse; message
             </>
           )}
           . This wallet is now on the public ban list. If you believe this is an error, dispute via{' '}
-          <a href="mailto:evan@pizzarobotstudios.com" className="text-red-200 underline">
-            evan@pizzarobotstudios.com
+          <a href="mailto:legal@tensorfeed.ai" className="text-red-200 underline">
+            legal@tensorfeed.ai
           </a>
           .
         </p>

@@ -471,7 +471,7 @@ export async function getSnapshotForDate(
 //
 // After each daily scan, diff the snapshot against a persistent ledger of
 // every repo we have ever surfaced. If repos we have never reported appear
-// and meet the alert threshold, email evan@tensorfeed.ai via Resend.
+// and meet the alert threshold, email legal@tensorfeed.ai via Resend.
 //
 // This used to diff against yesterday's snapshot alone, which was wrong.
 // The snapshot is a 25-slot window ranked on recency, and each query pulls
@@ -641,7 +641,7 @@ async function sendAlertEmail(
     console.warn('opportunity alert skipped: RESEND_API_KEY not set');
     return false;
   }
-  const to = env.ALERT_EMAIL_TO || 'evan@tensorfeed.ai';
+  const to = env.ALERT_EMAIL_TO || 'legal@tensorfeed.ai';
   const from = env.ALERT_EMAIL_FROM || 'alerts@tensorfeed.ai';
   try {
     const res = await fetch('https://api.resend.com/emails', {

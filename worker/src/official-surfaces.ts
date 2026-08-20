@@ -50,7 +50,7 @@ export const OFFICIAL_SURFACES: OfficialSurface[] = [
 export function buildOfficialSurfaces(payTo: string = CANONICAL_PAY_TO): {
   ok: true;
   site: 'tensorfeed.ai';
-  operator: 'Pizza Robot Studios LLC';
+  operator: 'TensorFeed.ai';
   purpose: string;
   payment: {
     network: 'base';
@@ -58,7 +58,7 @@ export function buildOfficialSurfaces(payTo: string = CANONICAL_PAY_TO): {
     pay_to: string;
     usdc_contract: string;
     decimals: 6;
-    operator: 'Pizza Robot Studios LLC';
+    operator: 'TensorFeed.ai';
     cross_published_at: string[];
     warning: string;
   };
@@ -73,7 +73,7 @@ export function buildOfficialSurfaces(payTo: string = CANONICAL_PAY_TO): {
   return {
     ok: true,
     site: 'tensorfeed.ai',
-    operator: 'Pizza Robot Studios LLC',
+    operator: 'TensorFeed.ai',
     purpose:
       'Canonical list of the authentic surfaces TensorFeed.ai publishes. Use it to verify that an npm package, MCP server, SDK, repository, dataset, or payment address claiming to be TensorFeed is genuinely ours before you trust or pay it.',
     payment: {
@@ -82,7 +82,7 @@ export function buildOfficialSurfaces(payTo: string = CANONICAL_PAY_TO): {
       pay_to: payTo,
       usdc_contract: USDC_BASE,
       decimals: 6,
-      operator: 'Pizza Robot Studios LLC',
+      operator: 'TensorFeed.ai',
       cross_published_at: ['/api/payment/info', '/llms.txt'],
       warning:
         'This is the only address TensorFeed will ever ask you to pay. Cross-check it against /api/payment/info and /llms.txt before sending funds. Any other address claiming to be TensorFeed is not us.',
