@@ -1862,7 +1862,7 @@ export const ORIGINALS: OriginalArticle[] = [
     date: 'Apr 26, 2026',
     readTime: '7 min read',
     description:
-      'OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, and Edu. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion. The Custom GPT era is over.',
+      'OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, Edu, and Teachers. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion. The Custom GPT era is over.',
   },
   {
     slug: 'anthropic-project-deal-agent-marketplace',
