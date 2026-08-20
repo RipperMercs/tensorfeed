@@ -26,7 +26,7 @@ const VELOCITY_KEY = 'openalex-ai-citation-velocity:current';
 const BATCH_CAP = 200;
 const TLDR_CLIP = 280;
 const FETCH_TIMEOUT_MS = 20_000;
-const UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 
 interface S2Paper {
   externalIds?: { DOI?: string } | null;

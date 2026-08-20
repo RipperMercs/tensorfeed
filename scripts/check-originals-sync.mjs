@@ -86,7 +86,7 @@ async function main() {
   }
   if (!missingLlms.length && llmsCount === slugs.length) passed.push(`llms.txt: ${slugs.length} match plus count`);
 
-  // 4) Retired bylines. "Ripper" is a retired persona (Evan's old byline; he stepped off
+  // 4) Retired bylines. "Ripper" is a retired persona (an early byline that stepped off
   //    the page to run the backend, and Adrian Vale inherited the writing seat). The
   //    daily-article skill bans it, but an automated run can still fall back to it (a
   //    generation pass once wrote the git user.name "Ripper" instead of rotating), so this

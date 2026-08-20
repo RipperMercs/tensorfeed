@@ -367,7 +367,7 @@ X-Credits-Remaining: 99
 <h2 id="8-federation-patterns" className="text-2xl sm:text-3xl font-bold text-text-primary mt-12 mb-5 leading-tight scroll-mt-24">8. Federation Patterns</h2>
 <p className="my-4 text-text-secondary leading-relaxed">Two AFTA-adopting sites can federate on a payment rail. This section documents the pattern as we have implemented it.</p>
 <h3 id="81-the-two-member-federation-today" className="text-xl sm:text-2xl font-semibold text-text-primary mt-8 mb-4 leading-snug scroll-mt-24">8.1 The two-member federation today</h3>
-<p className="my-4 text-text-secondary leading-relaxed">TensorFeed.ai and TerminalFeed.io are both AFTA-certified, both Pizza Robot Studios projects, and both share a single credit ledger hosted on TensorFeed. The federation was established 2026-04-30, the same day AFTA went live.</p>
+<p className="my-4 text-text-secondary leading-relaxed">TensorFeed.ai and TerminalFeed.io are both AFTA-certified, both operated under common control, and both share a single credit ledger hosted on TensorFeed. The federation was established 2026-04-30, the same day AFTA went live.</p>
 <p className="my-4 text-text-secondary leading-relaxed">A bearer token issued at TensorFeed works seamlessly at TerminalFeed. The agent does not need to buy credits separately. The agent does not even need to know the federation exists. It calls a TerminalFeed premium endpoint with its TensorFeed token, the call works, the credit is decremented from the shared ledger, and TerminalFeed signs its own receipt with its own key.</p>
 <p className="my-4 text-text-secondary leading-relaxed">The mechanics are an internal HTTP rail between the two workers. TerminalFeed&apos;s worker, on receiving a premium call:</p>
 <ol className="list-decimal list-inside space-y-2 my-5 text-text-secondary">
@@ -571,7 +571,7 @@ X-Credits-Remaining: 99
   <li className="leading-relaxed">Nottingham, M. <em>Well-Known URIs.</em> RFC 8615. 2019.</li>
   <li className="leading-relaxed">Roca, V., et al. <em>HTTP Status Code 402 Payment Required (Reserved).</em> RFC 9110, Section 15.5.2. 2022.</li>
   <li className="leading-relaxed">Anthropic. <em>Claude on Agent Reliability.</em> Internal blog series, 2025-2026.</li>
-  <li className="leading-relaxed">Pizza Robot Studios LLC. <em>TensorFeed.ai Public Repository.</em> <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">github.com/RipperMercs/tensorfeed</code>. 2025-2026.</li>
+  <li className="leading-relaxed">TensorFeed.ai. <em>TensorFeed.ai Public Repository.</em> <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">github.com/RipperMercs/tensorfeed</code>. 2025-2026.</li>
 </ol>
 <hr className="my-10 border-border" />
 <p className="my-4 text-text-secondary leading-relaxed"><em>This paper was drafted in May 2026 by Adrian Vale for TensorFeed.ai with substantial collaboration from Claude (Anthropic). The drafting transcript, design choices, and revisions are logged in the project memory. All numerical claims are reproducible from the public TensorFeed surface or the linked manifests at the time of writing.</em></p>

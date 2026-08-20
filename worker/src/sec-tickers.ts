@@ -34,7 +34,7 @@ const TICKERS_META_KEY = 'sec:tickers:meta';
 // SEC requires a descriptive User-Agent. Format per
 // https://www.sec.gov/os/accessing-edgar-data: "Sample Company Name
 // AdminContact@<sample company domain>.com"
-const SEC_USER_AGENT = 'TensorFeed evan@tensorfeed.ai';
+const SEC_USER_AGENT = 'TensorFeed legal@tensorfeed.ai';
 
 // ── Types ───────────────────────────────────────────────────────────
 

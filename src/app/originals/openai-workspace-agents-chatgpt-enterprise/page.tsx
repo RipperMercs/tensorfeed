@@ -300,7 +300,7 @@ export default function OpenAIWorkspaceAgentsPage() {
         </p>
 
         <p>
-          For Evan and the rest of us building on top of these platforms, the takeaway is
+          For those of us building on top of these platforms, the takeaway is
           simple. Stop thinking about prompts and start thinking about jobs. The unit of value
           is no longer a clever instruction or a fine-tuned chatbot. It is a piece of work
           that finishes while you are asleep, costs three credits, and lands in your Slack

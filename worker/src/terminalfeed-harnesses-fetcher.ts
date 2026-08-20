@@ -36,7 +36,7 @@
 import type { Env } from './types';
 
 const TERMINALFEED_HARNESSES_URL = 'https://terminalfeed.io/api/harnesses';
-const POLITE_UA = 'tensorfeed-federation/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-federation/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 12_000;
 
 export const TF_HARNESSES_CURRENT_KEY = 'tf-harnesses:current';

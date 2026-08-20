@@ -41,7 +41,7 @@ import type { Env } from './types';
 import { AI_RELEVANCE_KEYWORDS } from './ai-supply-chain-iocs';
 
 const APIS_GURU_LIST_URL = 'https://api.apis.guru/v2/list.json';
-const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 30_000;
 
 const CURRENT_KEY = 'apis-guru-ai:current';

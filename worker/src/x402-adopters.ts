@@ -76,7 +76,7 @@ export const X402_ADOPTERS: X402Adopter[] = [
   {
     id: 'tensorfeed',
     name: 'TensorFeed.ai',
-    org: 'Pizza Robot Studios',
+    org: 'TensorFeed.ai',
     category: 'publisher',
     status: 'live',
     networks: ['base'],
@@ -92,7 +92,7 @@ export const X402_ADOPTERS: X402Adopter[] = [
   {
     id: 'terminalfeed',
     name: 'TerminalFeed.io',
-    org: 'Pizza Robot Studios',
+    org: 'TerminalFeed.io',
     category: 'publisher',
     status: 'live',
     networks: ['base'],
@@ -144,7 +144,7 @@ export const X402_ADOPTERS: X402Adopter[] = [
   {
     id: 'tensorfeed-python-sdk',
     name: 'tensorfeed (Python)',
-    org: 'Pizza Robot Studios',
+    org: 'TensorFeed.ai',
     category: 'sdk',
     status: 'sdk',
     networks: ['base'],
@@ -160,7 +160,7 @@ export const X402_ADOPTERS: X402Adopter[] = [
   {
     id: 'tensorfeed-js-sdk',
     name: 'tensorfeed (JavaScript)',
-    org: 'Pizza Robot Studios',
+    org: 'TensorFeed.ai',
     category: 'sdk',
     status: 'sdk',
     networks: ['base'],
@@ -178,7 +178,7 @@ export const X402_ADOPTERS: X402Adopter[] = [
   {
     id: 'afta-gateway',
     name: 'afta-gateway',
-    org: 'Pizza Robot Studios',
+    org: 'TensorFeed.ai',
     category: 'gateway',
     status: 'gateway',
     networks: ['base'],
@@ -196,7 +196,7 @@ export const X402_ADOPTERS: X402Adopter[] = [
   {
     id: 'tensorfeed-mcp',
     name: 'tensorfeed-mcp (MCP server)',
-    org: 'Pizza Robot Studios',
+    org: 'TensorFeed.ai',
     category: 'reference',
     status: 'live',
     networks: ['base'],

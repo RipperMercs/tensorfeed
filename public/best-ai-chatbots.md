@@ -1,12 +1,12 @@
 # Best AI Chatbots Compared (2026)
 
 > Source: https://tensorfeed.ai/best-ai-chatbots
-> Last generated: 2026-06-05
+> Last generated: 2026-08-20
 
 ())}
       />
 
-      Last Updated: May 31, 2026
+      Last Updated: June 5, 2026
 
       # 
         AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini
@@ -108,10 +108,11 @@
 
             ### Best for Long Documents: Gemini
 
-              Gemini's 1M token context window is unmatched. If you need to analyze entire
-              codebases, lengthy legal documents, or multiple research papers at once, Gemini can
-              handle it. Claude's 200K context is the second-best option and generally
-              provides higher-quality analysis within that limit.
+              Gemini, Claude Opus 4.8, and GPT-5.5 now all support 1M token context windows, so raw
+              capacity is a three-way tie. Gemini still edges this category because it pairs the
+              large window with the most generous free tier and deep Google Search and Workspace
+              integration for working across long documents. Claude tends to produce the
+              highest-quality analysis within a long context; Gemini wins on cost and reach.
 
             ### Best Free Option: Gemini
 
@@ -195,7 +196,7 @@
 
             ### Which AI chatbot is the smartest?
 
-              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude Opus 4.7 leads on
+              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude Opus 4.8 leads on
               coding and complex instruction following with a 1M token context window. GPT-5.5 leads on
               creative tasks, multimodal input, and has the broadest plugin ecosystem.
 
@@ -239,10 +240,10 @@
 
             ### Which AI chatbot has the largest context window?
 
-              As of May 2026, three chatbots support 1 million token context windows: Claude Opus 4.7,
+              As of May 2026, three chatbots support 1 million token context windows: Claude Opus 4.8,
               GPT-5.5, and Gemini 2.5 Pro. One million tokens is roughly 750,000 words, enough to fit an
-              entire mid-sized codebase or several full books in a single conversation. Gemini was first to
-              ship 1M context; Claude was last to add it (Opus 4.7, April 2026), closing the long-context gap.
+              entire mid-sized codebase or several full books in a single conversation. All three reached 1M
+              context with their current flagships, so long-context capacity is now a tie at the top.
 
             ### What is the cheapest AI chatbot?
 
@@ -251,8 +252,8 @@
 
                 $0.02 per million input tokens
 
-              today, on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.7 cost $15 per
-              million input tokens, which is roughly 880x the floor.
+              today, on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.8 cost $5 per
+              million input tokens, which is roughly 250x the floor.
 
             ### Should I pay for ChatGPT, Claude, or Gemini?
 

@@ -19,7 +19,7 @@ import { URL } from 'url';
 
 const OUT_DIR = path.join(process.cwd(), 'public', 'gear');
 const UA =
-  'TensorFeed.ai/1.0 (https://tensorfeed.ai; evan@tensorfeed.ai)';
+  'TensorFeed.ai/1.0 (https://tensorfeed.ai; legal@tensorfeed.ai)';
 
 function extFromUrl(u) {
   const lower = u.toLowerCase().split('?')[0];

@@ -135,7 +135,7 @@ async function fetchPackageStats(pkg: string): Promise<DownloadCounts | null> {
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'tensorfeed-pypi-trending/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)',
+        'User-Agent': 'tensorfeed-pypi-trending/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)',
         'Accept': 'application/json',
       },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),

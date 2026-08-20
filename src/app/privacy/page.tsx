@@ -36,17 +36,17 @@ export default function PrivacyPage() {
         {/* Intro */}
         <section>
           <p>
-            TensorFeed.ai (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is operated by Pizza Robot
-            Studios LLC, a California limited liability company. We are committed to protecting your
+            TensorFeed.ai (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is an independent
+            project. We are committed to protecting your
             privacy and being transparent about how we collect and use data. This Privacy Policy
             explains our practices regarding information collection, use, and disclosure when you
             visit tensorfeed.ai (the &quot;Site&quot;).
           </p>
           <p className="mt-3">
-            <span className="text-text-primary font-medium">Data controller.</span> Pizza Robot
-            Studios LLC, 3705 W Pico Blvd #B, Los Angeles, CA 90019, USA. Data-protection contact:{' '}
-            <a href="mailto:evan@pizzarobotstudios.com" className="text-accent-primary hover:underline">
-              evan@pizzarobotstudios.com
+            <span className="text-text-primary font-medium">Data controller.</span> TensorFeed.ai.
+            Data-protection contact:{' '}
+            <a href="mailto:legal@tensorfeed.ai" className="text-accent-primary hover:underline">
+              legal@tensorfeed.ai
             </a>.
           </p>
         </section>
@@ -276,12 +276,12 @@ export default function PrivacyPage() {
           <p className="mb-3">
             <span className="text-text-primary font-medium">Cross-site sharing with TerminalFeed.</span>{' '}
             Premium credits and bearer tokens are jointly redeemable on tensorfeed.ai and
-            terminalfeed.io under Section 17.8 of the Terms. The TensorFeed payment Worker, also
-            operated by Pizza Robot Studios LLC, is the system of record for credit balances.
+            terminalfeed.io under Section 17.8 of the Terms. The TensorFeed payment Worker, run
+            under the same common control, is the system of record for credit balances.
             Wallet addresses, transaction hashes, bearer-token hashes, and per-call telemetry
             generated on either site are processed by the same operating entity for the unified
-            credit-accounting system. No third-party data processor outside Pizza Robot Studios
-            LLC and our infrastructure providers (currently Cloudflare, Chainalysis sanctions
+            credit-accounting system. No third-party data processor outside TensorFeed.ai
+            and our infrastructure providers (currently Cloudflare, Chainalysis sanctions
             screening, the Coinbase Developer Platform settlement facilitator, and the Base and
             Solana mainnet networks themselves) receives this data for the cross-site
             bundle.

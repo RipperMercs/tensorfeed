@@ -201,7 +201,7 @@ async function fetchSeries(seriesId: string): Promise<IndicatorObservation[]> {
   const url = `${BLS_V1_BASE}${encodeURIComponent(seriesId)}`;
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'tensorfeed-bls/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)',
+      'User-Agent': 'tensorfeed-bls/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)',
       'Accept': 'application/json',
     },
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),

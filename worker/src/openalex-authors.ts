@@ -33,7 +33,7 @@ import { fetchOpenAlexWithRetry } from './openalex-fetch';
 
 const OPENALEX_BASE = 'https://api.openalex.org';
 const AI_CONCEPT_ID = 'C154945302';
-const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 
 const CURRENT_KEY = 'openalex-ai-authors:current';
 const TOP_N = 100;
@@ -115,7 +115,7 @@ async function fetchAuthorAggregate(): Promise<AuthorAggregate[]> {
     `?filter=concepts.id:${AI_CONCEPT_ID},from_publication_date:${fromDate}` +
     `&group_by=authorships.author.id` +
     `&per_page=200` +
-    `&mailto=evan@tensorfeed.ai`;
+    `&mailto=legal@tensorfeed.ai`;
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
     Accept: 'application/json',
@@ -144,7 +144,7 @@ async function fetchAuthorDetails(ids: string[]): Promise<Map<string, OpenAlexAu
     `?filter=ids.openalex:${encodeURIComponent(filterValue)}` +
     `&select=id,display_name,orcid,affiliations,summary_stats,works_count,cited_by_count` +
     `&per_page=200` +
-    `&mailto=evan@tensorfeed.ai`;
+    `&mailto=legal@tensorfeed.ai`;
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
     Accept: 'application/json',

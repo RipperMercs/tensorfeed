@@ -28,7 +28,7 @@ import type { Env } from './types';
 import { CURATED_PYPI_PACKAGES } from './pypi-ai-packages';
 import { CURATED_PACKAGES as CURATED_NPM_PACKAGES } from './npm-ai-packages';
 
-const POLITE_UA = 'tensorfeed-releases/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-releases/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 12_000;
 // Keep enough recent versions to cover 30 days of even the fastest-cadence
 // AI packages so releases_30d (and the fastest_cadence_30d ranking that

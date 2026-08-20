@@ -1124,14 +1124,14 @@ console.log(series.summary);`,
     seoDescription:
       'TensorFeed /api/payment/info returns the wallet address, pricing tiers, supported flows, and verification metadata for the agent payments tier. Free, no auth.',
     intro:
-      'The /api/payment/info endpoint returns everything an agent needs to validate before sending USDC: wallet address, asset (USDC contract on Base), credit-per-USD pricing, volume bundles, both supported flows (credits and x402 fallback), and the operator legal entity (Pizza Robot Studios LLC, California). Cross-check the wallet address here against the other three published locations before sending funds.',
+      'The /api/payment/info endpoint returns everything an agent needs to validate before sending USDC: wallet address, asset (USDC contract on Base), credit-per-USD pricing, volume bundles, both supported flows (credits and x402 fallback), and the operator legal entity (TensorFeed.ai, California). Cross-check the wallet address here against the other three published locations before sending funds.',
     whenToUse:
       'Always call this before initiating a credit purchase. The response is the canonical source of truth for the wallet address and current pricing.',
     params: [],
     exampleResponse: `{
   "ok": true,
   "operator": {
-    "legal_entity": "Pizza Robot Studios LLC",
+    "legal_entity": "TensorFeed.ai",
     "jurisdiction": "California, USA",
     "contact": "contact@tensorfeed.ai"
   },
@@ -1164,7 +1164,7 @@ console.log('Wallet:', info.wallet.address);`,
       },
       {
         q: 'What is the operator legal entity?',
-        a: 'Pizza Robot Studios LLC, a California limited liability company. They are the legal counterparty for premium-tier purchases and disputes per the Terms of Service at /terms. Credit purchases are non-refundable per Section 17.5.',
+        a: 'TensorFeed.ai. It is the legal counterparty for premium-tier purchases and disputes per the Terms of Service at /terms. Credit purchases are non-refundable per Section 17.5.',
       },
     ],
   },

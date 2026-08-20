@@ -82,7 +82,7 @@ export default function ContactPage() {
             <h2 className="text-lg font-semibold text-text-primary">Press Inquiries</h2>
           </div>
           <p className="text-text-secondary text-sm mb-4">
-            Media requests, interviews, or press-related questions about TensorFeed or Pizza Robot Studios.
+            Media requests, interviews, or press-related questions about TensorFeed.
           </p>
           <a
             href="mailto:press@tensorfeed.ai"
@@ -145,8 +145,8 @@ export default function ContactPage() {
         </div>
 
         <p className="text-xs text-text-muted pt-4 border-t border-border leading-relaxed">
-          Response time: within 48 hours; faster for data accuracy and content removal requests. Published
-          by Pizza Robot Studios LLC, 3705 W Pico Blvd #B, Los Angeles, CA 90019.
+          Response time: within 48 hours; faster for data accuracy and content removal requests.
+          TensorFeed.ai is an independent project. Legal and formal notice: legal@tensorfeed.ai.
         </p>
       </div>
     </div>

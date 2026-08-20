@@ -23,7 +23,7 @@ import type { Env } from './types';
  */
 
 const OPENREVIEW_BASE = 'https://api2.openreview.net';
-const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 const CURRENT_KEY = 'openreview-acceptances:current';
 const PER_TIER_LIMIT = 50;
 const TOTAL_CAP = 120;

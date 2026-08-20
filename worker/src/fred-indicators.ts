@@ -212,7 +212,7 @@ async function fetchSeries(seriesId: string, apiKey: string): Promise<IndicatorO
 
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'tensorfeed-fred/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)',
+      'User-Agent': 'tensorfeed-fred/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)',
       'Accept': 'application/json',
     },
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),

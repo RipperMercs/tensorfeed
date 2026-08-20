@@ -62,7 +62,7 @@ crons = [
   "25 */2 * * *",
   "0 7 * * *",
   "30 8 * * *",
-  # Daily 15:00 UTC: email evan@tensorfeed.ai a digest of new agent-work
+  # Daily 15:00 UTC: email legal@tensorfeed.ai a digest of new agent-work
   # gig listings posted to the public jobs board in the last 24 hours
   # (worker/src/jobs-digest.ts). 08:00 America/Los_Angeles during PDT,
   # 07:00 during PST (accepted seasonal drift). No email on a zero-
@@ -529,7 +529,7 @@ binding = "AI"
 ENVIRONMENT = "production"
 SITE_URL = "https://tensorfeed.ai"
 INDEXNOW_KEY = "5903913788b6a62e3d10e63e3319020a"
-ALERT_EMAIL_TO = "evan@tensorfeed.ai"
+ALERT_EMAIL_TO = "legal@tensorfeed.ai"
 ALERT_EMAIL_FROM = "alerts@tensorfeed.ai"
 # CreditLedger DO debit path activation (Phase 3 of Tier 2 audit
 # response, 2026-05-26). Flipped to 'true' 2026-05-26 same session as

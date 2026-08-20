@@ -6,7 +6,7 @@ import JsonLd from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Adrian Vale, Founder and Lead Editor',
   description:
-    'Adrian Vale (Evan) is the founder and lead editor of TensorFeed.ai. Software engineer covering AI agents, developer tooling, infrastructure, and the frontier model race.',
+    'Adrian Vale is the founder and lead editor of TensorFeed.ai. Software engineer covering AI agents, developer tooling, infrastructure, and the frontier model race.',
   alternates: {
     canonical: 'https://tensorfeed.ai/authors/adrian-vale',
   },
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     url: 'https://tensorfeed.ai/authors/adrian-vale',
     title: 'Adrian Vale, Founder and Lead Editor',
     description:
-      'Adrian Vale (Evan) is the founder and lead editor of TensorFeed.ai. Software engineer covering AI agents, developer tooling, infrastructure, and the frontier model race.',
+      'Adrian Vale is the founder and lead editor of TensorFeed.ai. Software engineer covering AI agents, developer tooling, infrastructure, and the frontier model race.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'Adrian Vale, Founder and Lead Editor',
     description:
-      'Adrian Vale (Evan) is the founder and lead editor of TensorFeed.ai. Software engineer covering AI agents, developer tooling, infrastructure, and the frontier model race.',
+      'Adrian Vale is the founder and lead editor of TensorFeed.ai. Software engineer covering AI agents, developer tooling, infrastructure, and the frontier model race.',
   },
 };
 
@@ -31,7 +31,6 @@ const personJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: 'Adrian Vale',
-  alternateName: 'Evan',
   url: 'https://tensorfeed.ai/authors/adrian-vale',
   image: 'https://tensorfeed.ai/tensorfeed-logo.png',
   jobTitle: 'Founder and Lead Editor',
@@ -107,7 +106,6 @@ export default function AdrianValeAuthorPage() {
           Founder and Lead Editor
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mt-2">Adrian Vale</h1>
-        <p className="text-text-muted text-sm mt-2">Evan, writing as Adrian Vale</p>
       </header>
 
       <section className="space-y-4 text-text-secondary leading-relaxed mb-10">
@@ -123,8 +121,7 @@ export default function AdrianValeAuthorPage() {
           use, and to ship it for both human readers and AI agents from day one.
         </p>
         <p>
-          Before TensorFeed, Adrian Vale ran Pizza Robot Studios LLC, the independent studio
-          that operates TensorFeed and its sister site{' '}
+          Adrian Vale also oversees TensorFeed&apos;s sister site{' '}
           <a
             href="https://terminalfeed.io"
             target="_blank"

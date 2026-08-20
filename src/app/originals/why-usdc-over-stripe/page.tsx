@@ -177,7 +177,7 @@ export default function UsdcOverStripePage() {
           event, mint a bearer token, debit credits from the token. There is no PCI scope. There
           is no SCA. There is no chargeback handling. There is no subscription state machine. We
           do not need a customer portal. We do not need a tax engine because we receive USDC
-          directly and report it as ordinary income on the Pizza Robot Studios LLC books.
+          directly and report it as ordinary income on the TensorFeed.ai books.
         </p>
 
         <p>
@@ -198,8 +198,8 @@ export default function UsdcOverStripePage() {
         <p>
           The trust story is dramatically better too. Our wallet address is published in four
           locations (llms.txt, /api/payment/info, GitHub README, X bio). Anyone can verify the
-          legal entity behind the wallet (Pizza Robot Studios LLC, California) on the state
-          registry. Anyone can read every payment we have ever received from
+          operator behind the wallet on /terms, /privacy, and /api/payment/info. Anyone can
+          read every payment we have ever received from
           <a
             className="text-accent-primary hover:underline mx-1"
             href="https://basescan.org/address/0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"
@@ -264,7 +264,7 @@ export default function UsdcOverStripePage() {
             README, verified socials) so callers can cross-check before sending funds.
           </li>
           <li>
-            Document the legal entity. We added Pizza Robot Studios LLC to /terms, /privacy,
+            Document the operator. We publish the counterparty on /terms, /privacy,
             /api/payment/info, and the .well-known/x402 manifest so any agent auditing the
             counterparty before paying knows exactly who it is dealing with.
           </li>

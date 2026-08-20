@@ -92,8 +92,7 @@ export default function EditorialPolicyPage() {
             <h2 className="text-xl font-semibold text-text-primary">Editorial Independence</h2>
           </div>
           <p className="mb-3">
-            TensorFeed is operated by Pizza Robot Studios LLC, an independent company
-            based in Los Angeles, California. We have taken no venture capital, no
+            TensorFeed.ai is an independent publication. We have taken no venture capital, no
             strategic investment from any AI provider, and no sponsorship that influences
             our coverage.
           </p>

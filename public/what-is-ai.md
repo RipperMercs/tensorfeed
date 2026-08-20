@@ -1,7 +1,7 @@
 # What is Artificial Intelligence? A Complete Guide
 
 > Source: https://tensorfeed.ai/what-is-ai
-> Last generated: 2026-06-05
+> Last generated: 2026-08-20
 
 Last Updated: March 2026
 

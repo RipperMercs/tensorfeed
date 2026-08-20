@@ -47,7 +47,7 @@ const AI_CONCEPT_NAME = 'Machine learning + Deep learning';
 // Polite-pool email signal in the User-Agent. OpenAlex docs recommend
 // including a contact so they can reach out if something goes wrong;
 // not required, no auth, just goodwill that gets faster responses.
-const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
+const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 
 const CURRENT_KEY = 'openalex-ai-institutions:current';
 const META_KEY = 'openalex-ai-institutions:meta';
@@ -92,7 +92,7 @@ async function fetchInstitutionAggregate(): Promise<InstitutionAggregate[]> {
     `?filter=concepts.id:${AI_CONCEPT_ID},from_publication_date:${fromDate}` +
     `&group_by=authorships.institutions.id` +
     `&per_page=200` +
-    `&mailto=evan@tensorfeed.ai`;
+    `&mailto=legal@tensorfeed.ai`;
 
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
@@ -126,7 +126,7 @@ async function fetchInstitutionDetails(ids: string[]): Promise<Map<string, OpenA
     `?filter=ids.openalex:${encodeURIComponent(filterValue)}` +
     `&select=id,display_name,country_code,type,works_count` +
     `&per_page=200` +
-    `&mailto=evan@tensorfeed.ai`;
+    `&mailto=legal@tensorfeed.ai`;
 
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,

@@ -1,7 +1,7 @@
 """
 Build the ai-research FREE firehose static feed from a DataPal batch.
 
-Reads the YAML chunks of an Evan-authorized ai-research firehose batch and
+Reads the YAML chunks of an operator-authorized ai-research firehose batch and
 emits a single static JSON feed at public/api/research/firehose.json.
 
 This feed ships ONLY under the non-negotiable labeling contract (see the

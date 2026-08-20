@@ -151,7 +151,7 @@ export default function GearPolicyPage() {
             About TensorFeed
           </h2>
           <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            TensorFeed.ai is an AI ecosystem hub run by Pizza Robot Studios.
+            TensorFeed.ai is an independent AI ecosystem hub.
             We publish original editorial at{' '}
             <Link href="/originals" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>
               /originals

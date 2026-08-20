@@ -33,7 +33,7 @@ const AUTHORS = [
     role: 'Founder and Lead Editor',
     beat: 'Software engineering, AI agents, developer tooling, infrastructure',
     summary:
-      'Evan (Adrian Vale) is a software engineer and entrepreneur with over a decade of experience building web applications, real-time data systems, and developer tools. He founded TensorFeed in March 2026 and leads all editorial decisions.',
+      'Adrian Vale is a software engineer and entrepreneur with over a decade of experience building web applications, real-time data systems, and developer tools. He founded TensorFeed in March 2026 and leads all editorial decisions.',
   },
   {
     slug: 'kira-nolan',
