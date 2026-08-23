@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'nvidia-poolside-6b-reverse-acquihire-chip-layer',
+    title:
+      'Nvidia Paid Poolside $6B Not to Buy It. The Reverse Acquihire Just Jumped to the Chip Layer.',
+    author: 'Kira Nolan',
+    date: 'August 23, 2026',
+    readTime: '6 min read',
+    description:
+      "On Thursday, August 20, 2026, Nvidia agreed to pay Poolside $6 billion for a non-exclusive license to its Model Factory training software, hire 109 of the engineers who built its Laguna open-weights model, and put $1 billion of new equity into what remains of Poolside at a $12 billion pre-money valuation. Poolside plans to distribute the $6 billion license fee back to its investors by end of 2027. There is no merger agreement, no acquisition, and no Hart-Scott-Rodino filing. Inside the deal shape (six line items: $6B license fee, $1B equity check at $12B pre-money, 109 engineer hires, three co-founders staying, end-of-2027 distribution timeline, NVDA stock down 5 percent on the week), why the shape is the story (non-exclusive license plus talent-hire notice plus minority equity assembles the same practical outcome as an acquisition without triggering merger review, the pieces are individually lawful and the composite is hard to name), and why this is the first time the pattern jumps to the silicon layer (Microsoft Inflection, Google Character.AI, Google Windsurf, Google Mechanize, Amazon Adept, SpaceX Cursor were all hyperscaler shaped, and when Nvidia runs the play there is no next silicon vendor a challenger can pivot to). What Nvidia actually bought (a working large-model training stack in Model Factory, 109 senior engineers who have shipped a from-scratch large-model training run, and a structural option on the coding-model layer through the 7.7 percent equity stake in the surviving Poolside shell). What Poolside investors get (a dividend framed as a licensing fee, twelve times the peak paper mark at Series B in cash rather than acquirer stock, on a schedule the LPs can see). The regulator read (Section 7 of the Clayton Act gives the FTC and DOJ standing regardless of HSR triggers, and the interesting jurisdictional question is that any theory of harm now has to articulate which market got less competitive because Poolside's training team now sits inside the sole silicon vendor to every hyperscaler, harder to write than the Microsoft Inflection brief was but not unwritable). Three signposts: whether the FTC or DOJ issues a Second Request inside 90 days, whether AMD or Intel run a comparable deal against an open-weights training team inside six months, and whether Poolside's next Laguna release ships from the rebuilt team on the promised cadence.",
+  },
+  {
     slug: 'cisa-ray-cve-kev-ml-compute-framework-first',
     title:
       'CISA Put an ML Compute Framework in the KEV Catalog for the First Time. The Ray Patch Deadline Was Three Days.',
