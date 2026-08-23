@@ -267,7 +267,7 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-08-16',
+  lastUpdated: '2026-08-23',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
@@ -285,7 +285,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'openai', name: 'OpenAI', logo: '/images/providers/openai.png', url: 'https://openai.com',
       models: [
-        { id: 'gpt-5-6-sol', name: 'GPT-5.6 Sol', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
+        { id: 'gpt-5-6-sol', name: 'GPT-5.6 Sol', inputPrice: 4, outputPrice: 20, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'gpt-5-6-terra', name: 'GPT-5.6 Terra', inputPrice: 2.00, outputPrice: 12, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'gpt-5-6-luna', name: 'GPT-5.6 Luna', inputPrice: 0.20, outputPrice: 1.20, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gpt-5-5', name: 'GPT-5.5', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
