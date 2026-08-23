@@ -5,7 +5,7 @@
  * providers. The model-providers' own APIs (Anthropic, OpenAI, Google)
  * are already in /api/models. This module covers the third-party
  * inference layer: Together, Fireworks, Groq, DeepInfra, OpenRouter,
- * Replicate, Anyscale, Hugging Face Inference.
+ * Replicate, Anyscale, Venice, Hugging Face Inference.
  *
  * Agents picking the cheapest path for Llama 4 Scout / DeepSeek V4 /
  * Mixtral can call /api/inference-providers/cheapest?model=... and get
@@ -138,6 +138,7 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
       { provider: 'Fireworks', providerModelId: 'accounts/fireworks/models/deepseek-v4-pro', inputPrice: 0.30, outputPrice: 1.20, blendedPrice: 0.75, contextWindow: 1000000, outputTPS: 85, features: ['function-calling', 'json-mode'], url: 'https://fireworks.ai/pricing', note: '' },
       { provider: 'OpenRouter', providerModelId: 'deepseek/deepseek-chat', inputPrice: 0.14, outputPrice: 0.28, blendedPrice: 0.21, contextWindow: 1000000, outputTPS: null, features: ['function-calling'], url: 'https://openrouter.ai/deepseek/deepseek-chat', note: 'Routes to first-party DeepSeek' },
       { provider: 'GitHub Models', providerModelId: 'DeepSeek-V4-Pro', inputPrice: 0, outputPrice: 0, blendedPrice: 0, contextWindow: 1000000, outputTPS: null, features: ['function-calling'], url: 'https://github.com/marketplace/models', note: 'Free tier rate-limited (prototyping); paid via Azure AI Foundry' },
+      { provider: 'Venice', providerModelId: 'deepseek-v4-pro', inputPrice: 1.65, outputPrice: 3.301, blendedPrice: 2.4755, contextWindow: 1000000, outputTPS: null, features: ['function-calling', 'json-mode'], url: 'https://docs.venice.ai/overview/pricing', note: 'Privacy-first host: no prompt retention. Premium over first-party DeepSeek is the privacy tier, not a compute discount' },
     ],
   },
   {
@@ -152,6 +153,7 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
       { provider: 'Together AI', providerModelId: 'deepseek-ai/DeepSeek-V4-Flash', inputPrice: 0.10, outputPrice: 0.30, blendedPrice: 0.20, contextWindow: 130000, outputTPS: 145, features: ['function-calling', 'json-mode'], url: 'https://www.together.ai/pricing', note: '' },
       { provider: 'Fireworks', providerModelId: 'accounts/fireworks/models/deepseek-v4-flash', inputPrice: 0.12, outputPrice: 0.36, blendedPrice: 0.24, contextWindow: 130000, outputTPS: 130, features: ['function-calling', 'json-mode'], url: 'https://fireworks.ai/pricing', note: '' },
       { provider: 'OpenRouter', providerModelId: 'deepseek/deepseek-flash', inputPrice: 0.04, outputPrice: 0.08, blendedPrice: 0.06, contextWindow: 130000, outputTPS: null, features: ['function-calling'], url: 'https://openrouter.ai/deepseek/deepseek-flash', note: '' },
+      { provider: 'Venice', providerModelId: 'deepseek-v4-flash', inputPrice: 0.138, outputPrice: 0.275, blendedPrice: 0.2065, contextWindow: 1000000, outputTPS: null, features: ['function-calling', 'json-mode'], url: 'https://docs.venice.ai/overview/pricing', note: 'Serves the full 1M context where most hosts cap this model at 130k' },
     ],
   },
 
@@ -205,10 +207,10 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
   },
 ];
 
-export const INFERENCE_LAST_UPDATED = '2026-05-24';
+export const INFERENCE_LAST_UPDATED = '2026-08-23';
 
 export const TRACKED_PROVIDERS = [
-  'Together AI', 'Fireworks', 'DeepInfra', 'Groq', 'OpenRouter', 'Replicate', 'Anyscale', 'DeepSeek', 'GitHub Models',
+  'Together AI', 'Fireworks', 'DeepInfra', 'Groq', 'OpenRouter', 'Replicate', 'Anyscale', 'DeepSeek', 'GitHub Models', 'Venice',
 ];
 
 /**

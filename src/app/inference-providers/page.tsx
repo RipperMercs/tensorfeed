@@ -53,6 +53,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   Replicate: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
   Anyscale: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   DeepSeek: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+  Venice: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
 };
 
 function formatTPS(tps: number | null): string {
@@ -85,7 +86,7 @@ export default function InferenceProvidersPage() {
     '@type': 'Dataset',
     name: 'TensorFeed Inference Provider Pricing Matrix',
     description:
-      'Cross-provider pricing matrix for open-weight models across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, and first-party APIs (DeepSeek). Includes per-model output TPS, context window, and feature flags.',
+      'Cross-provider pricing matrix for open-weight models across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, Venice, and first-party APIs (DeepSeek). Includes per-model output TPS, context window, and feature flags.',
     url: 'https://tensorfeed.ai/inference-providers',
     keywords: 'inference pricing, Together AI, Fireworks, Groq, DeepInfra, OpenRouter, Llama 4, DeepSeek V4, Mixtral, Qwen',
     creator: { '@type': 'Organization', name: 'TensorFeed.ai', url: 'https://tensorfeed.ai' },
@@ -137,7 +138,7 @@ export default function InferenceProvidersPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
       <DatasetJsonLd
         name="TensorFeed Inference Provider Pricing Matrix"
-        description="Cross-provider pricing matrix for open-weight models across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, and first-party APIs. Includes per-model output tokens per second, context window, and feature flags, with the cheapest blended offer marked per model."
+        description="Cross-provider pricing matrix for open-weight models across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, Venice, and first-party APIs. Includes per-model output tokens per second, context window, and feature flags, with the cheapest blended offer marked per model."
         url="https://tensorfeed.ai/inference-providers"
         jsonUrl="/api/inference-providers"
         keywords={['inference pricing', 'together ai', 'fireworks', 'groq', 'deepinfra', 'openrouter', 'open weight models', 'blended token price']}
@@ -151,7 +152,7 @@ export default function InferenceProvidersPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Inference Provider Pricing</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          Same open-weight model, different price across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, and first-party APIs. The price spread on a single model can be 3-10x for the same nominal weights. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
+          Same open-weight model, different price across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, Venice, and first-party APIs. The price spread on a single model can be 3-10x for the same nominal weights. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
         <MachineReadableLink endpoint="/api/inference-providers" className="mt-2" />
       </div>

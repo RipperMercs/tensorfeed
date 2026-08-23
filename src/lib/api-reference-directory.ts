@@ -838,7 +838,7 @@ console.log(cheapest.name);`,
     seoDescription:
       'TensorFeed /api/inference-providers returns the cross-provider pricing matrix for open-weight models. Llama 4, DeepSeek V4, Mixtral, Qwen across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate. Free.',
     intro:
-      'The /api/inference-providers endpoint returns the cross-provider pricing matrix for open-weight models. Same Llama 4 Maverick / Scout / DeepSeek V4 / Mixtral / Qwen 2.5 weights, different price across 8 hosted providers. Each offer carries input price, output price, blended price, output TPS, context window the provider serves at, feature flags (function calling, json mode, vision), and the provider docs URL.',
+      'The /api/inference-providers endpoint returns the cross-provider pricing matrix for open-weight models. Same Llama 4 Maverick / Scout / DeepSeek V4 / Mixtral / Qwen 2.5 weights, different price across 10 hosted providers. Each offer carries input price, output price, blended price, output TPS, context window the provider serves at, feature flags (function calling, json mode, vision), and the provider docs URL.',
     whenToUse:
       'When your agent is picking the cheapest hosted inference path for an open-weight model. For a single-model lookup use /api/inference-providers/cheapest instead so you do not need the full matrix.',
     params: [
