@@ -331,7 +331,7 @@ import {
   validateOnly,
   commitInternal,
 } from './payments';
-import { buildPremiumBillingBlock } from './premium-billing';
+import { buildPremiumBillingBlock, attachBillingNarration } from './premium-billing';
 import {
   signReceipt,
   hashRequest,
@@ -1210,6 +1210,11 @@ async function premiumResponse(
     }
   }
 
+  // Last write to `billing`, after the free-trial and attestation
+  // mutations above have settled it. responseBody holds the same object
+  // by reference, so this lands in the serialized response.
+  attachBillingNarration(billing, { endpoint, receiptId: signed?.id ?? null });
+
   const finalResponse = new Response(JSON.stringify(responseBody), { status: 200, headers });
   // Tag the Response for the Agent Usage Meter when this call actually
   // debited credits, so the central AE hook records outcome 'paid', attributes
@@ -1350,6 +1355,8 @@ async function premiumValidationFailure(
   } else {
     responseBody.receipt_status = 'pending_key_bootstrap';
   }
+
+  attachBillingNarration(billing, { endpoint, receiptId: signed?.id ?? null });
 
   return new Response(JSON.stringify(responseBody), { status, headers });
 }
