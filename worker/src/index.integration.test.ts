@@ -156,6 +156,17 @@ describe('index.ts router money path (integration)', () => {
     // No no-charge reason on a real charge.
     expect(billing?.no_charge_reason ?? null).toBeNull();
 
+    // Narration: the quotable line an agent hands its human when asked
+    // what it just bought. Bearer reuse, so there is no settlement block:
+    // the on-chain tx that funded this token belongs to an earlier call.
+    const receiptId = (res.json?.receipt as Record<string, unknown> | undefined)?.id;
+    expect(billing?.summary).toBe(
+      `Charged 1 credit for /api/premium/routing, 49 credits remaining. ` +
+        `Signed receipt ${receiptId}, verifiable against TensorFeed's published Ed25519 key at ` +
+        `https://tensorfeed.ai/agent-fair-trade#receipts.`,
+    );
+    expect(billing?.settlement).toBeUndefined();
+
     // Balance actually decremented by exactly the cost.
     expect(await balanceOf(env, token)).toBe(49);
   });
@@ -180,6 +191,9 @@ describe('index.ts router money path (integration)', () => {
     expect(billing).toBeDefined();
     expect(billing?.credits_charged).toBe(0);
     expect(billing?.no_charge_reason).toBe('stale_data');
+    expect(billing?.summary).toContain(
+      'No charge for /api/premium/funding/exposure (stale_data), 100 credits remaining.',
+    );
 
     // Balance unchanged: stale data is free.
     expect(await balanceOf(env, token)).toBe(100);

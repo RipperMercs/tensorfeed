@@ -2601,6 +2601,44 @@ export default function AgentPaymentsPage() {
         </div>
       </section>
 
+      {/* Billing narration */}
+      <section className="mb-10" id="billing-summary">
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Billing Summary &amp; Settlement Trail</h2>
+          <p className="text-text-secondary text-sm mb-3">
+            The question an agent gets asked right after it spends money is &quot;what did you just buy, and how do
+            I know it happened?&quot; Every premium response answers that in one quotable line at{' '}
+            <code className="text-accent-primary font-mono">billing.summary</code>, so the agent can repeat it to
+            its principal without assembling the answer from four scattered fields.
+          </p>
+          <ul className="text-text-secondary text-sm space-y-2 mb-3">
+            <li>
+              <code className="text-accent-primary font-mono">billing.summary</code>: plain-language recap of the
+              charge (or the no-charge reason), the on-chain settlement if this call settled, and the receipt id
+              with its verification URL.
+            </li>
+            <li>
+              <code className="text-accent-primary font-mono">billing.settlement</code>: present only when{' '}
+              <span className="text-text-primary">this request</span> moved USDC, meaning the x402 V2 flow or the{' '}
+              <code className="font-mono">X-Payment-Tx</code> fallback. Carries{' '}
+              <code className="font-mono">rail</code>, <code className="font-mono">network</code>,{' '}
+              <code className="font-mono">tx_hash</code>, <code className="font-mono">payer</code>, and an{' '}
+              <code className="font-mono">explorer_url</code> pointing at BaseScan or Solscan.
+            </li>
+            <li>
+              Calls paid with an existing bearer token carry no settlement block. The transaction that funded that
+              token belongs to an earlier call, and citing it here would misattribute the payment for this one.
+            </li>
+          </ul>
+          <p className="text-text-muted text-sm">
+            Both fields are narration, not evidence. They are unsigned and sit outside the receipt&apos;s{' '}
+            <code className="font-mono">response_hash</code> coverage by design, and they only restate values
+            already present elsewhere in the response. The tamper-evident record is the signed receipt above plus
+            the on-chain transaction itself.
+          </p>
+        </div>
+      </section>
+
       {/* Data attestations */}
       <section className="mb-10" id="attestations">
         <div className="bg-bg-secondary border border-border rounded-xl p-5">

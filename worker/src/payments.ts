@@ -2467,6 +2467,17 @@ export interface PaymentResult {
   // Bearer-token reuse does not set this: that wallet paid on an earlier
   // call, not this one, so attributing it here would double-count.
   payerWallet?: string;
+  // On-chain settlement attributable to THIS request, surfaced so the
+  // response can cite a block-explorer link the agent's human can check.
+  // Set on the same two paths as payerWallet (x402 V2 settle and the
+  // X-Payment-Tx fallback) and for the same reason left unset on bearer
+  // reuse: that transaction funded the token on an earlier call, so
+  // quoting it here would misattribute the payment for this one.
+  settlementTxHash?: string;
+  settlementRail?: 'base' | 'solana';
+  // CAIP-2 network the facilitator echoed back (eip155:8453 mainnet,
+  // eip155:84532 Sepolia, solana:<genesis>). Drives explorer selection.
+  settlementNetwork?: string;
 }
 
 export async function requirePayment(
@@ -2903,6 +2914,12 @@ export async function requirePayment(
       tokenRemaining: tokenRecord.balance - cost,
       newToken: true,
       payerWallet: verified.senderAddress,
+      settlementTxHash: txHash,
+      // Path 2 is the pre-broadcast Base USDC fallback; it is verified
+      // against Base mainnet directly (verifyBaseUSDCTransaction), so the
+      // rail and network are fixed rather than echoed by a facilitator.
+      settlementRail: 'base',
+      settlementNetwork: 'eip155:8453',
     };
   }
 
@@ -3322,6 +3339,9 @@ export async function requirePayment(
           newToken: true,
           paymentResponseHeader: encodeSettlementHeader(settle),
           payerWallet: payerAddress,
+          settlementTxHash: settle.transaction,
+          settlementRail: parsed.rail === 'solana' ? 'solana' : 'base',
+          settlementNetwork: settle.network,
         };
       }
       // Marker present but the token record is gone (manual purge): fall
@@ -3391,6 +3411,9 @@ export async function requirePayment(
       newToken: true,
       paymentResponseHeader: encodeSettlementHeader(settle),
       payerWallet: payerAddress,
+      settlementTxHash: settle.transaction,
+      settlementRail: parsed.rail === 'solana' ? 'solana' : 'base',
+      settlementNetwork: settle.network,
     };
   }
 
