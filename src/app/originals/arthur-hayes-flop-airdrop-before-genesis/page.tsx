@@ -345,12 +345,12 @@ export default function ArthurHayesFlopAirdropBeforeGenesisPage() {
         <h2 className="text-lg font-semibold text-text-primary mb-4">Related</h2>
         <div className="grid gap-3">
           <Link
-            href="/originals/stripe-openrouter-7b-gateway-neutrality-consolidation"
+            href="/originals/stripe-openrouter-7b-agent-stack-consolidation"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
             <span className="text-text-primary text-sm">
-              Stripe Bought OpenRouter for $7 Billion. That Is the Second Neutral Gateway Acquired in
-              Three Months.
+              Stripe Bought OpenRouter for $7B. The Billing Rail and the Inference Gateway Are Now
+              One Company.
             </span>
           </Link>
           <Link

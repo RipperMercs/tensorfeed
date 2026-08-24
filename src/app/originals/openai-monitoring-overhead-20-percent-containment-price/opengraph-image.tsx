@@ -10,5 +10,5 @@ export const size = articleOgSize;
 export const contentType = articleOgContentType;
 
 export default function OpengraphImage() {
-  return articleOgImage('nvidia-poolside-6b-model-factory-license');
+  return articleOgImage('openai-monitoring-overhead-20-percent-containment-price');
 }
