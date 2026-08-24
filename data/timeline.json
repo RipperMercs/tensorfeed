@@ -1,6 +1,62 @@
 {
   "events": [
     {
+      "date": "2026-08-21",
+      "title": "OpenAI Cuts GPT-5.6 Sol API Pricing by 20 to 33 Percent Through November 21",
+      "provider": "OpenAI",
+      "category": "pricing",
+      "description": "OpenAI cut developer pricing on its flagship GPT-5.6 Sol on August 21, 2026, three weeks after leaving Sol untouched in the July 30 cut that dropped Luna 80 percent and Terra 20 percent. Input falls from $5 to $4 per million tokens (down 20 percent), output from $30 to $20 (down 33 percent), and cached input from $0.50 to $0.40. The rate is explicitly promotional and runs through at least November 21, 2026. It applies to the pay-as-you-go API, Codex credits, and eligible ChatGPT Work plans; Pro, Plus, and Business subscription prices are unchanged. This is the first time OpenAI has moved the flagship rate since GPT-5.5 set $5/$30 in April, and it lands with Claude Opus 5, Grok 4.6 at $2/$6, and a widening open-weight floor all pressing on the same tier."
+    },
+    {
+      "date": "2026-08-21",
+      "title": "Nvidia Pays Poolside $6 Billion to License Model Factory and Hire 109 Staff",
+      "provider": "Nvidia",
+      "category": "acquisition",
+      "description": "Nvidia agreed to pay roughly $6 billion for a non-exclusive license to Poolside's Model Factory, the training platform behind Poolside's Laguna coding model, and will extend offers to 109 Poolside employees who worked on it. Nvidia is separately investing $1 billion in Poolside at a $12 billion pre-money valuation, and Poolside's three co-founders stay with the company. Both sides say it is neither an acquisition nor an acquihire, and the non-exclusive license leaves Poolside free to license the same software elsewhere. The structure is the story: roughly $7 billion of value transferred, the core training infrastructure and the team that built it moved, and no merger filing triggered. Reporting frames Model Factory as running 10,000 to 20,000 training experiments a month with streaming data feeding training directly."
+    },
+    {
+      "date": "2026-08-20",
+      "title": "Broadcom Seeks $70 Billion to $80 Billion of Debt for a Second AI XPV Tranche",
+      "provider": "Broadcom",
+      "category": "milestone",
+      "description": "Bloomberg reported on August 20, 2026 that Broadcom was in talks with lenders for more than $60 billion of debt to fund custom AI chips for Anthropic and other labs, and CNBC put the target at $70 billion to $80 billion the next day, with a senior secured tranche around $60 billion to $70 billion and a junior tranche near $30 billion. Some reporting stretches the total toward $100 billion. This is the second transaction on the AI XPV platform Broadcom formed with Apollo and Blackstone in June, whose $35 billion opening deal financed roughly a gigawatt of Anthropic capacity. The structure keeps the accelerators off Anthropic's balance sheet: the vehicle borrows, buys the chips, and leases them back on a five-year term. The partnership targets more than 20 gigawatts delivered to frontier labs by 2028. BofA cut Broadcom credit from Overweight to Marketweight on August 11 citing XPV exposure."
+    },
+    {
+      "date": "2026-08-20",
+      "title": "Anthropic Reports Claude Designed Working Protein Binders for 14 of 15 Targets",
+      "provider": "Anthropic",
+      "category": "research",
+      "description": "Anthropic published lab-validated results on August 20, 2026 showing Claude autonomously designing de novo protein binders, with hits against 14 of 15 targets. Across a multi-arm campaign, Mythos Preview hit 26.7 percent and Opus 4.8 hit 22.6 percent over 48-hour runs, rising to 35.1 percent when Mythos Preview worked a single target across 24 hours, against a 10 to 15 percent rate typical of current protein design campaigns. The campaign produced 354 confirmed binders from 1,320 designs. Adaptyv Bio and Twist Bioscience synthesized and tested the designs independently, and on the RBX1 target Mythos Preview reached a 40 percent hit rate against 3.7 percent among human competition entrants. Anthropic is explicit that protein binders are not drugs and that a high-affinity binder is the first step, not the finish. It also says life-science tasks remain restricted in its most capable model and that an access program for scientists is being prepared."
+    },
+    {
+      "date": "2026-08-18",
+      "title": "OpenAI Launches ChatGPT for Teens With an Age Assurance Layer",
+      "provider": "OpenAI",
+      "category": "policy",
+      "description": "OpenAI introduced ChatGPT for Teens on August 18, 2026, a separate experience for 13 to 17 year olds with tightened content policies and a learning-oriented default, alongside a partnership with CodeAI aimed at classroom use. The product is best read as a compliance layer rather than a feature: age assurance obligations are landing across US state law, the UK Online Safety Act, and the EU, and shipping a distinct minor-facing tier lets OpenAI apply age-gated policy without reshaping the adult product. The open question is verification strength, since a self-declared birthday and an inference-based age estimate carry very different regulatory weight."
+    },
+    {
+      "date": "2026-08-18",
+      "title": "OpenAI Publishes the Cost of Frontier Containment at Roughly 20 Percent of Inference Compute",
+      "provider": "OpenAI",
+      "category": "policy",
+      "description": "OpenAI published \"Pacing model development in an era of cyber-critical capabilities\" on August 18, 2026 and disclosed a number no frontier lab had put in public before: monitoring overhead runs at roughly 20 percent of the inference compute being monitored, with wide variation across workloads. The post also confirmed two weeks of reinforcement learning halted on models intended for deployment, with the largest planned frontier RL run still on hold. Shipped controls include activation classifiers at every sampled token escalating to higher-compute automated investigators, a 30 minute target to surface concerning activity plus a further 30 minutes to clear it, mandatory coverage for all RL training and tool-using evaluations at Sol capability or higher, extended since August 7 to all Astra inference with tools, plus workload and network isolation for model-generated code. OpenAI also conceded that most of its current Preparedness Framework text dates to 2023 and is being rewritten. It is the first public unit price on frontier containment."
+    },
+    {
+      "date": "2026-08-17",
+      "title": "Nvidia Backs $105 Billion in Financing for an OpenAI Data Center in Ohio",
+      "provider": "Nvidia",
+      "category": "milestone",
+      "description": "A securities filing on August 17, 2026 disclosed that Nvidia will backstop up to $105 billion in financing for the PORTS-Pike Technology Campus in Pike County, Ohio, built by SoftBank's SB Energy on a former uranium enrichment site and fully leased to OpenAI. Nvidia is named exclusive AI compute infrastructure provider and its commitment covers the first 4.25 gigawatts; the campus is planned to reach 10 gigawatts, which would make it the largest data center in the world. The disclosed number came in roughly $145 billion below earlier reporting, which drew immediate questions about how much of the announced pipeline is firm and how much is a chip vendor financing demand for its own silicon."
+    },
+    {
+      "date": "2026-08-17",
+      "title": "Anthropic Annualized Revenue Tops $65 Billion Ahead of Its IPO",
+      "provider": "Anthropic",
+      "category": "milestone",
+      "description": "Bloomberg reported on August 17, 2026 that Anthropic's annualized revenue run rate passed $65 billion at the end of July, up more than sevenfold from the end of 2025 and ahead of OpenAI's reported $40 billion. Q2 2026 revenue came in above $11.5 billion, roughly 14 times the same quarter last year. Anthropic filed confidentially in June at a $965 billion Series H valuation and is expected to submit a public registration statement as soon as the end of August, with investors targeting an October listing at $2 trillion or more. Backers project $100 billion to $120 billion annualized before the year closes and roughly $190 billion to $200 billion of annual revenue by 2028, which is the number the valuation actually rests on."
+    },
+    {
       "date": "2026-08-14",
       "title": "Alibaba Releases Qwen3.8-27B Open Weights Under Apache 2.0",
       "provider": "Alibaba",
