@@ -434,13 +434,10 @@ export default function UltrafastSpeedTierListPriceExpiryPage() {
         <h2 className="text-lg font-semibold text-text-primary mb-4">Related</h2>
         <div className="grid gap-3">
           <Link
-            href="/originals/deepseek-v4-pro-0813-vendor-reported-agent-jump"
+            href="/originals/deepseek-v4-pro-price-inversion-open-harness"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">
-              DeepSeek Claimed a 49.9-Point Agent Jump and Never Wrote a Blog Post. Nobody Has
-              Reproduced It.
-            </span>
+            <span className="text-text-primary text-sm">DeepSeek Just Inverted the Pricing War. V4-Pro Ships With Higher Prices and an Open-Source Rival to Claude Code.</span>
           </Link>
           <Link
             href="/originals/wafer-scale-vs-gpu-what-cerebras-sells"

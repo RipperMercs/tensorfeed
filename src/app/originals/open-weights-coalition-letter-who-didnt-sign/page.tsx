@@ -217,7 +217,7 @@ export default function OpenWeightsCoalitionLetterPage() {
           distilling Anthropic&apos;s Fable model to build Kimi K3. Anthropic endorsed the
           statement. Treasury Secretary Scott Bessent raised sanctions. We covered why that charge
           is the weaker half of Washington&apos;s case in{' '}
-          <Link href="/originals/moonshot-distillation-charge-gb300-thailand" className="text-accent-primary hover:underline">
+          <Link href="/originals/white-house-moonshot-fable-gb300-treasury-gate" className="text-accent-primary hover:underline">
             the distillation charge is the weak half
           </Link>.
         </p>
@@ -394,16 +394,16 @@ export default function OpenWeightsCoalitionLetterPage() {
         <h2 className="text-lg font-semibold text-text-primary mb-4">Related</h2>
         <div className="grid gap-3">
           <Link
-            href="/originals/moonshot-distillation-charge-gb300-thailand"
+            href="/originals/white-house-moonshot-fable-gb300-treasury-gate"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">Washington Named Moonshot. The Distillation Charge Is the Weak Half. The Chips Are the Strong Half.</span>
+            <span className="text-text-primary text-sm">The White House Named Moonshot for Distilling Fable and Routing GB300s Through Thailand. Chinese Open Weights Are a Sanctions Question Now.</span>
           </Link>
           <Link
-            href="/originals/kimi-k3-largest-open-weight-model-frontier-gap"
+            href="/originals/kimi-k3-open-frontier-ceiling-8x"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">Kimi K3 Is the Largest Open Model Ever and It Sits Three Points Off the Frontier. The Weights Drop This Week.</span>
+            <span className="text-text-primary text-sm">Kimi K3 Ships With 2.8 Trillion Open Weights. The Open Frontier Ceiling Just Went Up 8x in Three Days.</span>
           </Link>
           <Link
             href="/originals/glm-5-2-open-weights-not-sovereignty"

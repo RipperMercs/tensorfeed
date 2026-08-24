@@ -166,7 +166,7 @@ export default function Pixel11TensorG6RamCutPage() {
           Put this launch next to the one from two days earlier and the ceiling becomes obvious. On
           Monday, Meta published Muse Glimmer, a{' '}
           <Link
-            href="/originals/meta-muse-glimmer-30b-local-agent"
+            href="/originals/meta-muse-glimmer-open-weights-local-agent-floor"
             className="text-accent-primary hover:underline"
           >
             roughly 30 billion parameter agentic model that runs on a single consumer GPU
@@ -353,13 +353,10 @@ export default function Pixel11TensorG6RamCutPage() {
         <h2 className="text-lg font-semibold text-text-primary mb-4">Related</h2>
         <div className="grid gap-3">
           <Link
-            href="/originals/meta-muse-glimmer-30b-local-agent"
+            href="/originals/meta-muse-glimmer-open-weights-local-agent-floor"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">
-              Three Days After OpenAI Hit the Brakes, Meta Handed Everyone a 30B Agent That Runs on
-              One GPU.
-            </span>
+            <span className="text-text-primary text-sm">Meta Shipped a 30B Agent That Runs on a Laptop. Muse Glimmer Is the Second Track, and the Zuckerberg Op-Ed Is the Ask.</span>
           </Link>
           <Link
             href="/originals/apple-gemini-siri-extensions-wwdc-2026"

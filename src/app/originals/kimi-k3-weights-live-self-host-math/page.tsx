@@ -422,13 +422,10 @@ export default function KimiK3WeightsLiveSelfHostMathPage() {
         <h2 className="text-lg font-semibold text-text-primary mb-4">Related</h2>
         <div className="grid gap-3">
           <Link
-            href="/originals/kimi-k3-largest-open-weight-model-frontier-gap"
+            href="/originals/kimi-k3-open-frontier-ceiling-8x"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">
-              Kimi K3 Is the Largest Open Model Ever and It Sits Three Points Off the
-              Frontier. The Weights Drop This Week.
-            </span>
+            <span className="text-text-primary text-sm">Kimi K3 Ships With 2.8 Trillion Open Weights. The Open Frontier Ceiling Just Went Up 8x in Three Days.</span>
           </Link>
           <Link
             href="/originals/open-weights-coalition-letter-who-didnt-sign"

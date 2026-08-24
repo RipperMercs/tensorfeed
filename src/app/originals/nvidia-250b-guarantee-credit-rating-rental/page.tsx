@@ -311,12 +311,10 @@ export default function NvidiaGuaranteeCreditRatingRentalPage() {
             </span>
           </Link>
           <Link
-            href="/originals/amd-anthropic-2-gigawatt-circular-deal"
+            href="/originals/amd-anthropic-2gw-mi450-fifth-vendor"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">
-              AMD Is Buying Into Anthropic. The Real Story Is Anthropic Buying Its Way Off NVIDIA.
-            </span>
+            <span className="text-text-primary text-sm">AMD Put $5 Billion Into Anthropic for 2 Gigawatts of MI450. The Fifth Compute Vendor Comes With a ROCm Engineering Team Attached.</span>
           </Link>
           <Link
             href="/originals/hyperscaler-earnings-week-backlog-defense"
