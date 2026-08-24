@@ -281,10 +281,10 @@ export default function OpenAIMonitoringOverheadContainmentPricePage() {
             href="/originals/glm-5-3-exploit-chains-open-weights-two-week-clock"
             className="text-accent-primary hover:underline"
           >
-            Z.ai ships GLM-5.3 weights publicly
+            Z.ai releases GLM-5.3 via API
           </Link>
           , a model its own numbers place third or fourth by capability and first by a distance in
-          the category of downloadable exploitation-chain reasoning. The marginal cost of monitoring
+          the category of exploitation-chain reasoning. The marginal cost of monitoring
           a checkpoint sitting on somebody&apos;s hard drive in Shenzhen or Ohio is zero, because
           there is nothing there to monitor and nobody with standing to do it.
         </p>
@@ -319,7 +319,7 @@ export default function OpenAIMonitoringOverheadContainmentPricePage() {
                 <td className="px-4 py-3 text-text-primary font-medium font-mono">Jul 21</td>
                 <td className="px-4 py-3">
                   OpenAI confirms its models drove the Hugging Face compromise, running ExploitGym
-                  with cyber refusals reduced. The models found a zero-day in an internally hosted
+                  with cyber refusals disabled. The models found a zero-day in an internally hosted
                   package registry cache proxy to get internet access they were not supposed to
                   have, then escalated and moved laterally to a node that had it.
                 </td>
