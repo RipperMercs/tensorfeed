@@ -31,12 +31,19 @@ fi
 # working tree for review, so a direct push to main deploys whatever gets committed;
 # this is the real backstop. When a commit touches any originals surface, the set must
 # stay in sync AND complete: no retired byline, every article has its OG shim, the newest
-# article has a hero. scripts/check-originals-sync.mjs reads the working tree and exits
-# non-zero on any drift, blocking a broken or half-finished article from being committed.
+# article has a hero, and every internal /originals link resolves. scripts/check-originals-sync.mjs
+# reads the working tree and exits non-zero on any drift, blocking a broken or half-finished
+# article from being committed.
+#
+# Link integrity was added 2026-08-24 after nine dead Related links reached production: two
+# pipelines produce different slugs for the same story, so an article drafted against one line
+# links to a slug the other never published, and nothing validated link TARGETS. The check
+# scans every article page rather than only staged ones, because renaming one article breaks
+# links in files a commit never touches.
 if git diff --cached --name-only | grep -qE '^(src/app/originals/|src/lib/originals-directory\.ts|src/app/sitemap\.ts|public/llms\.txt)'; then
   if ! node scripts/check-originals-sync.mjs; then
     echo "COMMIT BLOCKED: originals sync-check failed (see above)."
-    echo "Fix the byline, hero, OG shim, or registration, then retry."
+    echo "Fix the byline, hero, OG shim, registration, or dead /originals link, then retry."
     exit 1
   fi
 fi
