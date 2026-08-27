@@ -267,7 +267,7 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-08-23',
+  lastUpdated: '2026-08-26',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
@@ -310,6 +310,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'meta', name: 'Meta', logo: '/images/providers/meta.png', url: 'https://ai.meta.com',
       models: [
+        { id: 'muse-glimmer-30b', name: 'Muse Glimmer 30B', inputPrice: 0.35, outputPrice: 1.5, contextWindow: 131072, released: '2026-08', openSource: true, license: 'Apache-2.0', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'muse-spark-1-2', name: 'Muse Spark 1.2', inputPrice: 1.25, outputPrice: 4.25, contextWindow: 1000000, released: '2026-08', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'muse-spark-1-2-contributor', name: 'Muse Spark 1.2 Contributor', inputPrice: 0.1, outputPrice: 0.2, contextWindow: 1000000, released: '2026-08', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'muse-spark-1-1', name: 'Muse Spark 1.1', inputPrice: 1.25, outputPrice: 4.25, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
@@ -342,6 +343,8 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'alibaba', name: 'Alibaba', logo: '/images/providers/alibaba.png', url: 'https://qwenlm.ai',
       models: [
+        { id: 'qwen3-8-27b', name: 'Qwen3.8 27B', inputPrice: 0.425, outputPrice: 2.55, contextWindow: 1000000, released: '2026-08', openSource: true, license: 'Apache-2.0', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'qwen3-8-a95b', name: 'Qwen3.8 2.4T-A95B', inputPrice: 2.0, outputPrice: 6.0, contextWindow: 1048576, released: '2026-08', openSource: true, license: 'Qwen3.8-Max License', capabilities: ['text', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'qwen3-8-max', name: 'Qwen3.8-Max', inputPrice: 2, outputPrice: 6, contextWindow: 1000000, released: '2026-08', capabilities: ['text', 'vision', 'video', 'code', 'reasoning', 'tool-use'], tier: 'flagship' },
         { id: 'qwen3-7-max', name: 'Qwen3.7-Max', inputPrice: 2.5, outputPrice: 7.5, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'code', 'reasoning', 'tool-use'], tier: 'flagship' },
       ],
@@ -357,6 +360,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'nvidia', name: 'NVIDIA', logo: '/images/providers/nvidia.png', url: 'https://www.nvidia.com/en-us/ai/',
       models: [
+        { id: 'nemotron-3-5-lightning', name: 'Nemotron 3.5 Lightning', inputPrice: 0.08, outputPrice: 0.2, contextWindow: 262144, released: '2026-08', openSource: true, license: 'OpenMDW-1.1', capabilities: ['text', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'nemotron-3-nano-omni', name: 'Nemotron 3 Nano Omni', inputPrice: 0, outputPrice: 0, contextWindow: 256000, released: '2026-04', openSource: true, license: 'NVIDIA Open Model License', capabilities: ['text', 'vision', 'audio', 'video', 'code', 'reasoning', 'tool-use'], tier: 'mid' },
       ],
     },
@@ -381,13 +385,14 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'zhipu', name: 'Z.ai (Zhipu AI)', logo: '/images/providers/zhipu.png', url: 'https://z.ai',
       models: [
+        { id: 'glm-5-3', name: 'GLM-5.3', inputPrice: 1.4, outputPrice: 4.4, contextWindow: 1048576, released: '2026-08', capabilities: ['text', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'glm-5-2', name: 'GLM-5.2', inputPrice: 1.4, outputPrice: 4.4, contextWindow: 1000000, released: '2026-06', openSource: true, license: 'MIT', capabilities: ['text', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
       ],
     },
     {
       id: 'moonshot', name: 'Moonshot AI', logo: '/images/providers/moonshot.png', url: 'https://www.moonshot.cn',
       models: [
-        { id: 'kimi-k3', name: 'Kimi K3', inputPrice: 3, outputPrice: 15, contextWindow: 1000000, released: '2026-07', openSource: true, license: 'Modified MIT', capabilities: ['text', 'vision', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
+        { id: 'kimi-k3', name: 'Kimi K3', inputPrice: 3, outputPrice: 15, contextWindow: 1000000, released: '2026-07', openSource: true, license: 'Kimi K3 License', capabilities: ['text', 'vision', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
       ],
     },
     {

@@ -435,6 +435,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
 
   // ── Meta ───────────────────────────────────────────────────────────
   {
+    slug: 'muse-glimmer-30b',
+    pricingId: 'muse-glimmer-30b',
+    benchmarkName: 'Muse Glimmer 30B',
+    providerId: 'meta',
+    providerName: 'Meta',
+    providerUrl: 'https://research.meta.ai',
+    seoTitle: 'Muse Glimmer 30B: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Meta Muse Glimmer 30B, a dense multimodal Apache 2.0 model for always-on local agents, released August 2026. Pricing, benchmarks, and specs on TensorFeed.',
+    intro:
+      'Muse Glimmer 30B is Meta Superintelligence Labs\' open contribution to the August 2026 wave, and it is aimed squarely at agents that run continuously on one consumer GPU. It is dense rather than mixture-of-experts, roughly 29.6 billion parameters including the vision encoder, multimodal across text and image, and released under plain Apache 2.0. At high reasoning Meta reports 76.0 on SWE-Bench Verified, 51.2 on SWE-Bench Pro, 94.7 on AIME 2026, 83.5 on GPQA Diamond, 65.9 on OSWorld-Verified, and 51.7 on Terminal-Bench 2.1, which are strong figures for a dense model at this size. Context is 131,072 tokens, notably shorter than most of its 2026 peers, so it suits long-running loops more than whole-repository passes. One practical note for anyone scripting a download: the weights live under the meta-models organization on Hugging Face, not facebook or meta-llama.',
+    strengths: ['Apache 2.0 with no scale-based restrictions, unlike the Llama line', 'Dense 29.6B, sized for one consumer GPU', '76.0 SWE-Bench Verified and 94.7 AIME 2026 at high reasoning', 'Multimodal text and image input', 'Built for always-on local agentic workflows'],
+    useCases: ['Always-on local agents', 'Private multimodal workflows on owned hardware', 'Desktop and computer-use automation', 'Offline or air-gapped assistants'],
+    docsUrl: 'https://huggingface.co/meta-models/Muse-Glimmer-30B',
+    tier: 'mid',
+  },
+  {
     slug: 'llama-4-scout',
     pricingId: 'llama-4-scout',
     benchmarkName: 'Llama 4 Scout',
@@ -632,6 +649,40 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
 
   // ── Alibaba ────────────────────────────────────────────────────────
   {
+    slug: 'qwen3-8-27b',
+    pricingId: 'qwen3-8-27b',
+    benchmarkName: 'Qwen3.8 27B',
+    providerId: 'alibaba',
+    providerName: 'Alibaba',
+    providerUrl: 'https://qwen.ai',
+    seoTitle: 'Qwen3.8 27B: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Qwen3.8 27B is the most-downloaded open model of 2026: dense 27B vision-language under Apache 2.0, fits one GPU. Pricing, benchmarks, and specs on TensorFeed.',
+    intro:
+      'Qwen3.8 27B is the download leader of the 2026 open-weight wave, pulling roughly 3.3 million times a month on Hugging Face, and the reason is the combination it hits. It is a dense 27 billion parameter native vision-language model taking text, image, and video input, released under plain Apache 2.0 with switchable thinking, and it fits on a single H100 at FP8 or a single RTX 4090 at 4-bit. The scores are unusual for the size: 84.3 on OSWorld-Verified, 90.3 on LiveCodeBench v6, 89.2 on GPQA Diamond, 73.0 on Terminal-Bench 2.1, and 61.7 on SWE-bench Pro. Native context is 262,144 tokens, extensible toward 1M. Hosted pricing runs $0.425 per million input tokens and $2.55 output. If you want one open model on your own hardware that does vision, agentic coding, and computer use without a multi-GPU bill, this is currently the default answer.',
+    strengths: ['Apache 2.0 with no field-of-use restrictions', 'Dense 27B, single-GPU at FP8 and consumer-GPU at 4-bit', 'Native vision-language: text, image, and video input', '84.3 OSWorld-Verified and 90.3 LiveCodeBench v6 (vendor-reported)', 'Most-downloaded open model of the 2026 wave'],
+    useCases: ['Local and on-premise agents with vision', 'Computer-use automation on modest hardware', 'Fine-tuning base for domain-specific agents', 'Cost-sensitive high-volume inference'],
+    docsUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B',
+    tier: 'mid',
+  },
+  {
+    slug: 'qwen3-8-a95b',
+    pricingId: 'qwen3-8-a95b',
+    benchmarkName: 'Qwen3.8 2.4T-A95B',
+    providerId: 'alibaba',
+    providerName: 'Alibaba',
+    providerUrl: 'https://qwen.ai',
+    seoTitle: 'Qwen3.8 2.4T-A95B: The Largest Open Model',
+    seoDescription:
+      'Qwen3.8 2.4T-A95B is the largest open-weight model published: 2.4 trillion parameters, 95B active, 512 experts. Pricing, benchmarks, and license on TensorFeed.',
+    intro:
+      'Qwen3.8 2.4T-A95B is the largest open-weight language model published to date and the downloadable counterpart to Alibaba\'s hosted Qwen3.8-Max. It is a fine-grained mixture of experts: 2.4 trillion total parameters with 95 billion active per token, 92 layers, and 512 experts of which 10 route plus 1 shared. The model card reports 92.6 on GPQA Diamond, 86.6 on Terminal-Bench 2.1, 67.7 on SWE-bench Pro, and 93.0 on PaperBench. It is text only, with thinking mode permanently enabled. Two details deserve attention before you commit. The license is a custom Qwen3.8-Max License, not the Apache 2.0 that covers the smaller Qwen3.8 27B, so read it before commercial deployment. And the native context window is 262,144 tokens, extensible to roughly 1M with YaRN; the larger figure quoted by hosted providers is the extended one. Self-hosting this is a multi-node proposition, roughly 2.5TB of accelerator memory even at FP8.',
+    strengths: ['Largest open-weight model published, 2.4T total with 95B active', '92.6 GPQA Diamond and 67.7 SWE-bench Pro (vendor-reported)', '262K native context, extensible to roughly 1M with YaRN', 'Downloadable weights for a model at genuine frontier scale', 'Fine-grained MoE keeps active compute at 4 percent of total'],
+    useCases: ['Frontier reasoning where weights must stay in-house', 'Research on very large mixture-of-experts models', 'Long-horizon agentic coding', 'Sovereign or air-gapped deployments at rack scale'],
+    docsUrl: 'https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B',
+    tier: 'flagship',
+  },
+  {
     slug: 'qwen3-8-max',
     pricingId: 'qwen3-8-max',
     benchmarkName: 'Qwen3.8-Max',
@@ -667,6 +718,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
   },
 
   // ── NVIDIA ─────────────────────────────────────────────────────────
+  {
+    slug: 'nemotron-3-5-lightning',
+    pricingId: 'nemotron-3-5-lightning',
+    benchmarkName: 'Nemotron 3.5 Lightning',
+    providerId: 'nvidia',
+    providerName: 'NVIDIA',
+    providerUrl: 'https://www.nvidia.com',
+    seoTitle: 'Nemotron 3.5 Lightning: Pricing and Benchmarks',
+    seoDescription:
+      'NVIDIA Nemotron 3.5 Lightning, a 30B-A3B hybrid Mamba-2 MoE released August 2026 under OpenMDW-1.1 at $0.08/$0.20 per 1M tokens. Specs and benchmarks on TensorFeed.',
+    intro:
+      'Nemotron 3.5 Lightning is NVIDIA\'s August 2026 open model, and it is shipped as a starting point rather than a finished assistant. The architecture is a hybrid of Mamba-2 and mixture of experts at 30 billion total parameters with 3 billion active, which is what makes the $0.08 input and $0.20 output pricing possible. NVIDIA reports 81.94 on MMLU Pro, 75.44 on GPQA Diamond, 51.56 on SWE-bench Verified, and 36.97 on BrowseComp. One correction worth carrying: the license is OpenMDW-1.1, an external open-model license, not an NVIDIA-authored one, which makes the terms more predictable than the Nemotron name might suggest. The card advertises up to 1M context but notes that roughly 256K is the practical ceiling on a single H100. NVIDIA positions this explicitly as a customization and post-training base for agentic workloads, so read the benchmark numbers as a floor you are expected to build on.',
+    strengths: ['$0.08/$0.20 per 1M tokens, among the cheapest models tracked', '30B total with only 3B active per token', 'OpenMDW-1.1, a standard external open-model license', 'Hybrid Mamba-2 and MoE architecture', 'Built and licensed as a post-training and customization base'],
+    useCases: ['Fine-tuning and post-training for agentic tasks', 'High-volume classification and extraction', 'Latency-sensitive tool-calling loops', 'Edge and single-GPU deployments'],
+    docsUrl: 'https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16',
+    tier: 'budget',
+  },
   {
     slug: 'nemotron-3-nano-omni',
     pricingId: 'nemotron-3-nano-omni',
@@ -778,6 +846,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     tier: 'flagship',
   },
   // ── Z.ai (Zhipu AI) ────────────────────────────────────────────────
+  {
+    slug: 'glm-5-3',
+    pricingId: 'glm-5-3',
+    benchmarkName: 'GLM-5.3',
+    providerId: 'zhipu',
+    providerName: 'Z.ai (Zhipu AI)',
+    providerUrl: 'https://z.ai',
+    seoTitle: 'GLM-5.3: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'GLM-5.3 by Z.ai, announced August 14, 2026 at $1.40/$4.40 per 1M tokens. 1M context, frontier agentic coding, and open weights staged for release. On TensorFeed.',
+    intro:
+      'GLM-5.3 is Z.ai\'s August 2026 flagship, and the interesting part is how it was built: not a new pretrain, but extended post-training on the same base as GLM-5.2. The gains are concentrated where that kind of work pays off. Terminal-Bench 3.0 jumped from 4.6 to 28.3, DeepSWE v1.1 went from 46.2 to 66.9, and independent evaluation puts it at 95.4 on SWE-bench Verified. Z.ai also reports 62.5 on Humanity\'s Last Exam with tools and a notable cybersecurity capability that emerged rather than being targeted, with 54.4 on ExploitBench and 84.5 on CyberGym. Pricing is $1.40 per million input tokens and $4.40 output, with a 1M token context window and 128K max output. It launched API-first through the Z.ai API and Coding Plan; the Hugging Face repository is a gated placeholder counting down to August 28, 2026, so the weights are announced rather than available. Z.ai has not published a parameter count or a license for this release, and its predecessor\'s plain MIT terms should not be assumed to carry over. Treat every score here as vendor-reported except the independently run SWE-bench figure.',
+    strengths: ['Terminal-Bench 3.0 of 28.3, up from 4.6 on GLM-5.2', '95.4 on SWE-bench Verified from an independent evaluator', '1M token context with 128K max output', '$1.40/$4.40 pricing, far below comparable frontier coding models', 'Emergent cybersecurity capability: 84.5 CyberGym, 54.4 ExploitBench'],
+    useCases: ['Agentic coding and long-horizon software tasks', 'Security research and exploit reasoning', 'Cost-sensitive frontier workloads', 'Teams evaluating a self-hostable path once weights land'],
+    docsUrl: 'https://docs.z.ai/guides/llm/glm-5.3',
+    tier: 'flagship',
+  },
   {
     slug: 'glm-5-2',
     pricingId: 'glm-5-2',
