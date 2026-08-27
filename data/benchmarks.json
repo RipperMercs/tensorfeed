@@ -64,6 +64,18 @@
       "scores": {
         "gpqa_diamond": 94.5,
         "osworld_2": 47.9
+      },
+      "provenance": {
+        "gpqa_diamond": {
+          "type": "independent",
+          "by": "Artificial Analysis",
+          "url": "https://artificialanalysis.ai/evaluations/gpqa-diamond"
+        },
+        "osworld_2": {
+          "type": "vendor",
+          "by": "Google DeepMind",
+          "url": "https://deepmind.google/models/model-cards/gemini-3-7-flash/"
+        }
       }
     },
     {
@@ -72,6 +84,13 @@
       "released": "2026-08",
       "scores": {
         "gpqa_diamond": 94.9
+      },
+      "provenance": {
+        "gpqa_diamond": {
+          "type": "independent",
+          "by": "Artificial Analysis",
+          "url": "https://artificialanalysis.ai/evaluations/gpqa-diamond"
+        }
       }
     },
     {
@@ -83,6 +102,28 @@
         "mmlu_pro": 86.77,
         "gpqa_diamond": 88.13,
         "hle_tools": 62.5
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/models/zai_glm-5.3"
+        },
+        "mmlu_pro": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/models/zai_glm-5.3"
+        },
+        "gpqa_diamond": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/models/zai_glm-5.3"
+        },
+        "hle_tools": {
+          "type": "vendor",
+          "by": "Z.ai",
+          "url": "https://z.ai/blog/glm-5.3"
+        }
       }
     },
     {
@@ -93,6 +134,23 @@
         "swe_bench": 85.6,
         "gpqa_diamond": 92.6,
         "hle_tools": 56.2
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "Alibaba",
+          "url": "https://qwen.ai/blog?id=qwen3.8"
+        },
+        "hle_tools": {
+          "type": "vendor",
+          "by": "Alibaba",
+          "url": "https://qwen.ai/blog?id=qwen3.8"
+        }
       }
     },
     {
@@ -103,6 +161,23 @@
         "gpqa_diamond": 94.6,
         "osworld_2": 62.6,
         "browsecomp": 90.4
+      },
+      "provenance": {
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        },
+        "osworld_2": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        }
       }
     },
     {
@@ -113,6 +188,23 @@
         "gpqa_diamond": 92.9,
         "osworld_2": 50.2,
         "browsecomp": 87.5
+      },
+      "provenance": {
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        },
+        "osworld_2": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        }
       }
     },
     {
@@ -123,6 +215,23 @@
         "gpqa_diamond": 92.3,
         "osworld_2": 45.6,
         "browsecomp": 83.3
+      },
+      "provenance": {
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        },
+        "osworld_2": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "OpenAI",
+          "url": "https://openai.com/index/gpt-5-6/"
+        }
       }
     },
     {
@@ -131,6 +240,13 @@
       "released": "2026-07",
       "scores": {
         "osworld_2": 33.8
+      },
+      "provenance": {
+        "osworld_2": {
+          "type": "vendor",
+          "by": "Google DeepMind",
+          "url": "https://deepmind.google/models/model-cards/gemini-3-7-flash/"
+        }
       }
     },
     {
@@ -139,6 +255,13 @@
       "released": "2026-07",
       "scores": {
         "swe_bench": 86.6
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/benchmarks/swebench"
+        }
       }
     },
     {
@@ -150,6 +273,28 @@
         "gpqa_diamond": 87.2,
         "browsecomp": 77.1,
         "hle_tools": 46.0
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "vendor",
+          "by": "Thinking Machines",
+          "url": "https://thinkingmachines.ai/model-card/inkling/"
+        },
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "Thinking Machines",
+          "url": "https://thinkingmachines.ai/model-card/inkling/"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "Thinking Machines",
+          "url": "https://thinkingmachines.ai/model-card/inkling/"
+        },
+        "hle_tools": {
+          "type": "vendor",
+          "by": "Thinking Machines",
+          "url": "https://thinkingmachines.ai/model-card/inkling/"
+        }
       }
     },
     {
@@ -161,6 +306,28 @@
         "mmlu_pro": 86.71,
         "gpqa_diamond": 91.2,
         "hle_tools": 54.7
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/models/zai_glm-5.2"
+        },
+        "mmlu_pro": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/models/zai_glm-5.2"
+        },
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "Z.ai",
+          "url": "https://huggingface.co/zai-org/GLM-5.2"
+        },
+        "hle_tools": {
+          "type": "vendor",
+          "by": "Z.ai",
+          "url": "https://huggingface.co/zai-org/GLM-5.2"
+        }
       }
     },
     {
@@ -172,6 +339,28 @@
         "mmlu_pro": 84.22,
         "gpqa_diamond": 92.68,
         "browsecomp": 83.5
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "vendor",
+          "by": "MiniMax",
+          "url": "https://huggingface.co/MiniMaxAI/MiniMax-M3"
+        },
+        "mmlu_pro": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/benchmarks/mmlu_pro"
+        },
+        "gpqa_diamond": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/models/minimax_MiniMax-M3"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "MiniMax",
+          "url": "https://huggingface.co/MiniMaxAI/MiniMax-M3"
+        }
       }
     },
     {
@@ -181,6 +370,18 @@
       "scores": {
         "gpqa_diamond": 88.9,
         "browsecomp": 79.9
+      },
+      "provenance": {
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "Meituan",
+          "url": "https://huggingface.co/meituan-longcat/LongCat-2.0"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "Meituan",
+          "url": "https://huggingface.co/meituan-longcat/LongCat-2.0"
+        }
       }
     },
     {
@@ -230,6 +431,38 @@
         "osworld_2": 58.3,
         "browsecomp": 91.2,
         "hle_tools": 56.0
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/benchmarks/swebench"
+        },
+        "mmlu_pro": {
+          "type": "independent",
+          "by": "Vals AI",
+          "url": "https://www.vals.ai/benchmarks/mmlu_pro"
+        },
+        "gpqa_diamond": {
+          "type": "vendor",
+          "by": "Moonshot AI",
+          "url": "https://github.com/MoonshotAI/Kimi-K3"
+        },
+        "osworld_2": {
+          "type": "vendor",
+          "by": "Moonshot AI",
+          "url": "https://github.com/MoonshotAI/Kimi-K3"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "Moonshot AI",
+          "url": "https://github.com/MoonshotAI/Kimi-K3"
+        },
+        "hle_tools": {
+          "type": "vendor",
+          "by": "Moonshot AI",
+          "url": "https://github.com/MoonshotAI/Kimi-K3"
+        }
       }
     },
     {
@@ -250,6 +483,28 @@
         "browsecomp": 90.8,
         "frontier_code": 53.4,
         "hle_tools": 64.7
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-opus-5-system-card"
+        },
+        "osworld_2": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-opus-5-system-card"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-opus-5-system-card"
+        },
+        "frontier_code": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-opus-5-system-card"
+        }
       }
     },
     {
@@ -272,6 +527,23 @@
         "swe_bench": 85.2,
         "browsecomp": 84.7,
         "hle_tools": 57.4
+      },
+      "provenance": {
+        "swe_bench": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-sonnet-5-system-card"
+        },
+        "browsecomp": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-sonnet-5-system-card"
+        },
+        "hle_tools": {
+          "type": "vendor",
+          "by": "Anthropic",
+          "url": "https://www.anthropic.com/claude-sonnet-5-system-card"
+        }
       }
     },
     {
@@ -464,5 +736,15 @@
         "swe_bench": 42.0
       }
     }
-  ]
+  ],
+  "provenanceNotes": {
+    "field": "provenance",
+    "meaning": "Per-cell record of who produced a score, keyed by benchmark id.",
+    "types": {
+      "vendor": "Published by the lab that makes the model, including figures a lab commissioned from a benchmark maintainer.",
+      "independent": "Produced by a third party that ran the model itself, such as Vals AI or Artificial Analysis."
+    },
+    "absent": "A benchmark id missing from a model's provenance map means provenance was not recorded, or two sources disagreed. It is not a claim that the score is unsourced.",
+    "caution": "Vendor and independent figures are not interchangeable. Observed gaps on the same model and benchmark reach 10.9 points, so do not rank across mixed provenance without checking."
+  }
 }

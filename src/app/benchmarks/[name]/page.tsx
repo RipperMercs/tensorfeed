@@ -36,7 +36,13 @@ export function generateMetadata({ params }: { params: { name: string } }): Meta
 interface BenchmarksFile {
   lastUpdated: string;
   benchmarks: { id: string; name: string; description: string; maxScore: number }[];
-  models: { model: string; provider: string; released?: string; scores: Record<string, number> }[];
+  models: {
+    model: string;
+    provider: string;
+    released?: string;
+    scores: Record<string, number>;
+    provenance?: Record<string, { type: 'vendor' | 'independent'; by: string; url: string }>;
+  }[];
 }
 
 export default function BenchmarkLeaderboardPage({ params }: { params: { name: string } }) {
@@ -57,6 +63,7 @@ export default function BenchmarkLeaderboardPage({ params }: { params: { name: s
       provider: m.provider,
       released: m.released,
       score: m.scores[meta.slug],
+      prov: m.provenance?.[meta.slug],
       modelSlug: getModelSlugByBenchmarkName(m.model),
     }))
     .sort((a, b) => b.score - a.score);
@@ -199,8 +206,24 @@ export default function BenchmarkLeaderboardPage({ params }: { params: { name: s
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-text-secondary">{row.provider}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-accent-primary">
+                    <td className="px-4 py-2.5 text-right font-mono text-accent-primary whitespace-nowrap">
                       {row.score}%
+                      {row.prov && (
+                        <a
+                          href={row.prov.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`${row.prov.type === 'vendor' ? 'Reported by the model vendor' : 'Independently run'}: ${row.prov.by}`}
+                          aria-label={`${row.prov.type} score from ${row.prov.by}, opens in a new tab`}
+                          className={`ml-2 align-middle text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border font-medium font-sans ${
+                            row.prov.type === 'vendor'
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              : 'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                          }`}
+                        >
+                          {row.prov.type}
+                        </a>
+                      )}
                     </td>
                     <td className="px-4 py-2.5 text-right text-text-muted text-xs">
                       {row.released ?? '-'}

@@ -68,17 +68,40 @@ interface BenchmarkDef {
   maxScore: number;
 }
 
+/**
+ * Who produced one score. `vendor` covers anything published by the lab that
+ * makes the model, including a figure it commissioned from a benchmark
+ * maintainer. `independent` means a third party ran the model itself.
+ *
+ * Vendor and independent figures are NOT interchangeable: observed gaps on the
+ * same model and benchmark reach 10.9 points.
+ */
+interface ScoreProvenance {
+  type: 'vendor' | 'independent';
+  by: string;
+  url: string;
+}
+
 interface BenchmarkModelEntry {
   model: string;
   provider: string;
   released: string;
   scores: Record<string, number>;
+  /**
+   * Per-cell provenance, keyed by benchmark id. A benchmark id absent from
+   * this map means provenance was not recorded (or two sources disagreed and
+   * neither was asserted), NOT that the score is unsourced. Kept as a sibling
+   * of `scores` on purpose so `scores` stays Record<string, number> and every
+   * existing consumer is unaffected.
+   */
+  provenance?: Record<string, ScoreProvenance>;
 }
 
 interface BenchmarksData {
   lastUpdated: string;
   benchmarks: BenchmarkDef[];
   models: BenchmarkModelEntry[];
+  provenanceNotes?: Record<string, unknown>;
 }
 
 interface AgentEntry {
@@ -424,27 +447,139 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { id: 'hle_tools', name: "Humanity's Last Exam (tools)", description: 'Multidisciplinary expert-level reasoning with tool access', maxScore: 100 },
   ],
   models: [
-    { model: 'Gemini 3.7 Flash', provider: 'Google', released: '2026-08', scores: { gpqa_diamond: 94.5, osworld_2: 47.9 } },
-    { model: 'Grok 4.6', provider: 'xAI', released: '2026-08', scores: { gpqa_diamond: 94.9 } },
-    { model: 'GLM-5.3', provider: 'Z.ai', released: '2026-08', scores: { swe_bench: 95.4, mmlu_pro: 86.77, gpqa_diamond: 88.13, hle_tools: 62.5 } },
-    { model: 'Qwen3.8-Max', provider: 'Alibaba', released: '2026-08', scores: { swe_bench: 85.6, gpqa_diamond: 92.6, hle_tools: 56.2 } },
-    { model: 'GPT-5.6 Sol', provider: 'OpenAI', released: '2026-07', scores: { gpqa_diamond: 94.6, osworld_2: 62.6, browsecomp: 90.4 } },
-    { model: 'GPT-5.6 Terra', provider: 'OpenAI', released: '2026-07', scores: { gpqa_diamond: 92.9, osworld_2: 50.2, browsecomp: 87.5 } },
-    { model: 'GPT-5.6 Luna', provider: 'OpenAI', released: '2026-07', scores: { gpqa_diamond: 92.3, osworld_2: 45.6, browsecomp: 83.3 } },
-    { model: 'Gemini 3.6 Flash', provider: 'Google', released: '2026-07', scores: { osworld_2: 33.8 } },
-    { model: 'Grok 4.5', provider: 'xAI', released: '2026-07', scores: { swe_bench: 86.6 } },
-    { model: 'Inkling', provider: 'Thinking Machines', released: '2026-07', scores: { swe_bench: 77.6, gpqa_diamond: 87.2, browsecomp: 77.1, hle_tools: 46.0 } },
-    { model: 'GLM-5.2', provider: 'Z.ai', released: '2026-06', scores: { swe_bench: 82.8, mmlu_pro: 86.71, gpqa_diamond: 91.2, hle_tools: 54.7 } },
-    { model: 'MiniMax M3', provider: 'MiniMax', released: '2026-06', scores: { swe_bench: 80.5, mmlu_pro: 84.22, gpqa_diamond: 92.68, browsecomp: 83.5 } },
-    { model: 'LongCat-2.0', provider: 'Meituan', released: '2026-06', scores: { gpqa_diamond: 88.9, browsecomp: 79.9 } },
+    {
+      model: 'Gemini 3.7 Flash', provider: 'Google', released: '2026-08', scores: { gpqa_diamond: 94.5, osworld_2: 47.9 },
+      provenance: {
+        gpqa_diamond: { type: 'independent', by: 'Artificial Analysis', url: 'https://artificialanalysis.ai/evaluations/gpqa-diamond' },
+        osworld_2: { type: 'vendor', by: 'Google DeepMind', url: 'https://deepmind.google/models/model-cards/gemini-3-7-flash/' },
+      },
+    },
+    {
+      model: 'Grok 4.6', provider: 'xAI', released: '2026-08', scores: { gpqa_diamond: 94.9 },
+      provenance: {
+        gpqa_diamond: { type: 'independent', by: 'Artificial Analysis', url: 'https://artificialanalysis.ai/evaluations/gpqa-diamond' },
+      },
+    },
+    {
+      model: 'GLM-5.3', provider: 'Z.ai', released: '2026-08', scores: { swe_bench: 95.4, mmlu_pro: 86.77, gpqa_diamond: 88.13, hle_tools: 62.5 },
+      provenance: {
+        swe_bench: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/models/zai_glm-5.3' },
+        mmlu_pro: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/models/zai_glm-5.3' },
+        gpqa_diamond: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/models/zai_glm-5.3' },
+        hle_tools: { type: 'vendor', by: 'Z.ai', url: 'https://z.ai/blog/glm-5.3' },
+      },
+    },
+    {
+      model: 'Qwen3.8-Max', provider: 'Alibaba', released: '2026-08', scores: { swe_bench: 85.6, gpqa_diamond: 92.6, hle_tools: 56.2 },
+      provenance: {
+        swe_bench: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/benchmarks/swebench' },
+        gpqa_diamond: { type: 'vendor', by: 'Alibaba', url: 'https://qwen.ai/blog?id=qwen3.8' },
+        hle_tools: { type: 'vendor', by: 'Alibaba', url: 'https://qwen.ai/blog?id=qwen3.8' },
+      },
+    },
+    {
+      model: 'GPT-5.6 Sol', provider: 'OpenAI', released: '2026-07', scores: { gpqa_diamond: 94.6, osworld_2: 62.6, browsecomp: 90.4 },
+      provenance: {
+        gpqa_diamond: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+        osworld_2: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+        browsecomp: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+      },
+    },
+    {
+      model: 'GPT-5.6 Terra', provider: 'OpenAI', released: '2026-07', scores: { gpqa_diamond: 92.9, osworld_2: 50.2, browsecomp: 87.5 },
+      provenance: {
+        gpqa_diamond: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+        osworld_2: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+        browsecomp: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+      },
+    },
+    {
+      model: 'GPT-5.6 Luna', provider: 'OpenAI', released: '2026-07', scores: { gpqa_diamond: 92.3, osworld_2: 45.6, browsecomp: 83.3 },
+      provenance: {
+        gpqa_diamond: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+        osworld_2: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+        browsecomp: { type: 'vendor', by: 'OpenAI', url: 'https://openai.com/index/gpt-5-6/' },
+      },
+    },
+    {
+      model: 'Gemini 3.6 Flash', provider: 'Google', released: '2026-07', scores: { osworld_2: 33.8 },
+      provenance: {
+        osworld_2: { type: 'vendor', by: 'Google DeepMind', url: 'https://deepmind.google/models/model-cards/gemini-3-7-flash/' },
+      },
+    },
+    {
+      model: 'Grok 4.5', provider: 'xAI', released: '2026-07', scores: { swe_bench: 86.6 },
+      provenance: {
+        swe_bench: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/benchmarks/swebench' },
+      },
+    },
+    {
+      model: 'Inkling', provider: 'Thinking Machines', released: '2026-07', scores: { swe_bench: 77.6, gpqa_diamond: 87.2, browsecomp: 77.1, hle_tools: 46.0 },
+      provenance: {
+        swe_bench: { type: 'vendor', by: 'Thinking Machines', url: 'https://thinkingmachines.ai/model-card/inkling/' },
+        gpqa_diamond: { type: 'vendor', by: 'Thinking Machines', url: 'https://thinkingmachines.ai/model-card/inkling/' },
+        browsecomp: { type: 'vendor', by: 'Thinking Machines', url: 'https://thinkingmachines.ai/model-card/inkling/' },
+        hle_tools: { type: 'vendor', by: 'Thinking Machines', url: 'https://thinkingmachines.ai/model-card/inkling/' },
+      },
+    },
+    {
+      model: 'GLM-5.2', provider: 'Z.ai', released: '2026-06', scores: { swe_bench: 82.8, mmlu_pro: 86.71, gpqa_diamond: 91.2, hle_tools: 54.7 },
+      provenance: {
+        swe_bench: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/models/zai_glm-5.2' },
+        mmlu_pro: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/models/zai_glm-5.2' },
+        gpqa_diamond: { type: 'vendor', by: 'Z.ai', url: 'https://huggingface.co/zai-org/GLM-5.2' },
+        hle_tools: { type: 'vendor', by: 'Z.ai', url: 'https://huggingface.co/zai-org/GLM-5.2' },
+      },
+    },
+    {
+      model: 'MiniMax M3', provider: 'MiniMax', released: '2026-06', scores: { swe_bench: 80.5, mmlu_pro: 84.22, gpqa_diamond: 92.68, browsecomp: 83.5 },
+      provenance: {
+        swe_bench: { type: 'vendor', by: 'MiniMax', url: 'https://huggingface.co/MiniMaxAI/MiniMax-M3' },
+        mmlu_pro: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/benchmarks/mmlu_pro' },
+        gpqa_diamond: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/models/minimax_MiniMax-M3' },
+        browsecomp: { type: 'vendor', by: 'MiniMax', url: 'https://huggingface.co/MiniMaxAI/MiniMax-M3' },
+      },
+    },
+    {
+      model: 'LongCat-2.0', provider: 'Meituan', released: '2026-06', scores: { gpqa_diamond: 88.9, browsecomp: 79.9 },
+      provenance: {
+        gpqa_diamond: { type: 'vendor', by: 'Meituan', url: 'https://huggingface.co/meituan-longcat/LongCat-2.0' },
+        browsecomp: { type: 'vendor', by: 'Meituan', url: 'https://huggingface.co/meituan-longcat/LongCat-2.0' },
+      },
+    },
     { model: 'GPT-5.5', provider: 'OpenAI', released: '2026-04', scores: { mmlu_pro: 94.2, human_eval: 97.1, gpqa_diamond: 78.3, math: 95.8, swe_bench: 82.6 } },
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 80.6 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 79.0 } },
-    { model: 'Kimi K3', provider: 'Moonshot AI', released: '2026-07', scores: { swe_bench: 93.4, mmlu_pro: 87.97, gpqa_diamond: 93.5, osworld_2: 58.3, browsecomp: 91.2, hle_tools: 56.0 } },
+    {
+      model: 'Kimi K3', provider: 'Moonshot AI', released: '2026-07', scores: { swe_bench: 93.4, mmlu_pro: 87.97, gpqa_diamond: 93.5, osworld_2: 58.3, browsecomp: 91.2, hle_tools: 56.0 },
+      provenance: {
+        swe_bench: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/benchmarks/swebench' },
+        mmlu_pro: { type: 'independent', by: 'Vals AI', url: 'https://www.vals.ai/benchmarks/mmlu_pro' },
+        gpqa_diamond: { type: 'vendor', by: 'Moonshot AI', url: 'https://github.com/MoonshotAI/Kimi-K3' },
+        osworld_2: { type: 'vendor', by: 'Moonshot AI', url: 'https://github.com/MoonshotAI/Kimi-K3' },
+        browsecomp: { type: 'vendor', by: 'Moonshot AI', url: 'https://github.com/MoonshotAI/Kimi-K3' },
+        hle_tools: { type: 'vendor', by: 'Moonshot AI', url: 'https://github.com/MoonshotAI/Kimi-K3' },
+      },
+    },
     { model: 'Mistral Medium 3.5', provider: 'Mistral', released: '2026-05', scores: { swe_bench: 77.6 } },
-    { model: 'Claude Opus 5', provider: 'Anthropic', released: '2026-07', scores: { swe_bench: 96.0, osworld_2: 70.6, browsecomp: 90.8, frontier_code: 53.4, hle_tools: 64.7 } },
+    {
+      model: 'Claude Opus 5', provider: 'Anthropic', released: '2026-07', scores: { swe_bench: 96.0, osworld_2: 70.6, browsecomp: 90.8, frontier_code: 53.4, hle_tools: 64.7 },
+      provenance: {
+        swe_bench: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-opus-5-system-card' },
+        osworld_2: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-opus-5-system-card' },
+        browsecomp: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-opus-5-system-card' },
+        frontier_code: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-opus-5-system-card' },
+      },
+    },
     { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0, osworld_2: 66.1, browsecomp: 87.4, frontier_code: 53.5, hle_tools: 63.9 } },
-    { model: 'Claude Sonnet 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 85.2, browsecomp: 84.7, hle_tools: 57.4 } },
+    {
+      model: 'Claude Sonnet 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 85.2, browsecomp: 84.7, hle_tools: 57.4 },
+      provenance: {
+        swe_bench: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-sonnet-5-system-card' },
+        browsecomp: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-sonnet-5-system-card' },
+        hle_tools: { type: 'vendor', by: 'Anthropic', url: 'https://www.anthropic.com/claude-sonnet-5-system-card' },
+      },
+    },
     { model: 'Claude Opus 4.8', provider: 'Anthropic', released: '2026-05', scores: { gpqa_diamond: 93.6, swe_bench: 88.6, osworld_2: 55.7, browsecomp: 84.3, frontier_code: 46.5, hle_tools: 57.9 } },
     { model: 'Claude Opus 4.7', provider: 'Anthropic', released: '2026-04', scores: { mmlu_pro: 93.8, human_eval: 96.2, gpqa_diamond: 76.5, math: 93.1, swe_bench: 87.6 } },
     { model: 'Claude Opus 4.6', provider: 'Anthropic', released: '2026-03', scores: { mmlu_pro: 92.4, human_eval: 95.1, gpqa_diamond: 74.2, math: 91.8, swe_bench: 80.8 } },
@@ -462,6 +597,13 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { model: 'Mistral Small', provider: 'Mistral', released: '2025-01', scores: { mmlu_pro: 78.4, human_eval: 82.5, gpqa_diamond: 44.6, math: 68.9 } },
     { model: 'DeepSeek V3', provider: 'DeepSeek', released: '2025-12', scores: { mmlu_pro: 88.1, human_eval: 91.2, gpqa_diamond: 63.5, math: 85.9, swe_bench: 42.0 } },
   ],
+  provenanceNotes: {
+    field: 'provenance',
+    meaning: 'Per-cell record of who produced a score, keyed by benchmark id.',
+    types: { vendor: 'Published by the lab that makes the model, including figures a lab commissioned from a benchmark maintainer.', independent: 'Produced by a third party that ran the model itself, such as Vals AI or Artificial Analysis.' },
+    absent: "A benchmark id missing from a model's provenance map means provenance was not recorded, or two sources disagreed. It is not a claim that the score is unsourced.",
+    caution: 'Vendor and independent figures are not interchangeable. Observed gaps on the same model and benchmark reach 10.9 points, so do not rank across mixed provenance without checking.',
+  },
 };
 
 export const BASELINE_AGENTS: AgentsData = {

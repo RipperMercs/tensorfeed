@@ -14,11 +14,19 @@ interface BenchmarkDef {
   maxScore: number;
 }
 
+interface ScoreProvenance {
+  type: 'vendor' | 'independent';
+  by: string;
+  url: string;
+}
+
 interface ModelEntry {
   model: string;
   provider: string;
   released: string;
   scores: Record<string, number>;
+  /** Keyed by benchmark id. Absent key means provenance was not recorded. */
+  provenance?: Record<string, ScoreProvenance>;
 }
 
 interface BenchmarksData {
@@ -35,6 +43,34 @@ const PROVIDER_COLORS: Record<string, string> = {
   Mistral: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   DeepSeek: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
 };
+
+/**
+ * Marks who produced a score. Vendor and independent figures are not
+ * interchangeable: observed gaps on the same model and benchmark reach
+ * 10.9 points, so a bare leaderboard that mixes them is misleading.
+ * Renders nothing when provenance was never recorded.
+ */
+function ProvenanceBadge({ p }: { p?: ScoreProvenance }) {
+  if (!p) return null;
+  const vendor = p.type === 'vendor';
+  const label = vendor ? 'vendor' : 'independent';
+  return (
+    <a
+      href={p.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`${vendor ? 'Reported by the model vendor' : 'Independently run'}: ${p.by}`}
+      aria-label={`${label} score from ${p.by}, opens in a new tab`}
+      className={`ml-2 align-middle text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border font-medium transition-colors ${
+        vendor
+          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+          : 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20'
+      }`}
+    >
+      {label}
+    </a>
+  );
+}
 
 const RANK_STYLES: Record<number, string> = {
   1: 'text-yellow-400',
@@ -330,6 +366,7 @@ export default function BenchmarksPage() {
                 <td className="py-3 px-3">
                   <span className="font-mono text-text-primary font-semibold">{m.score.toFixed(1)}</span>
                   <span className="text-text-muted text-xs ml-1">/ {activeDef.maxScore}</span>
+                  <ProvenanceBadge p={m.provenance?.[activeBenchmark]} />
                 </td>
                 <td className="py-3 px-3 text-sm text-text-muted">{m.released}</td>
               </tr>
@@ -370,6 +407,27 @@ export default function BenchmarksPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-muted">
+        <span className="font-medium text-text-secondary">Score provenance:</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border font-medium bg-amber-500/10 text-amber-400 border-amber-500/20">
+            vendor
+          </span>
+          published by the lab that makes the model
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border font-medium bg-teal-500/10 text-teal-400 border-teal-500/20">
+            independent
+          </span>
+          run by a third party such as Vals AI or Artificial Analysis
+        </span>
+        <span>
+          An unmarked score means provenance is not yet recorded. The two kinds are not
+          interchangeable: gaps on the same model and benchmark reach 10.9 points, so treat a
+          mixed ranking with care. Each badge links to its source.
+        </span>
       </div>
 
       <LastUpdatedFooter path="/benchmarks" />

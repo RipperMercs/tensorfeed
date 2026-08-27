@@ -22,6 +22,7 @@ import io
 import json
 import os
 import sys
+from collections import OrderedDict
 from decimal import Decimal
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,8 +68,28 @@ def gen_benchmarks(data):
     out.write("  ],\n")
     out.write("  models: [\n")
     for m in data["models"]:
-        out.write("    " + obj_inline(m) + ",\n")
+        # A row carrying provenance would run to several hundred characters on
+        # one line, so break that key out while the rest stays inline.
+        prov = m.get("provenance")
+        if not prov:
+            out.write("    " + obj_inline(m) + ",\n")
+            continue
+        head = OrderedDict((k, x) for k, x in m.items() if k != "provenance")
+        out.write("    {\n")
+        out.write("      " + ", ".join(k + ": " + val(x) for k, x in head.items()) + ",\n")
+        out.write("      provenance: {\n")
+        for bid, cell in prov.items():
+            out.write("        " + bid + ": " + val(cell) + ",\n")
+        out.write("      },\n")
+        out.write("    },\n")
     out.write("  ],\n")
+    # Emit any remaining top-level key (provenanceNotes and future siblings)
+    # rather than a fixed list, so nothing is silently dropped from the mirror.
+    for k, v_ in data.items():
+        if k in ("lastUpdated", "benchmarks", "models"):
+            continue
+        rendered = gen_nested(v_, 2) if isinstance(v_, dict) else val(v_)
+        out.write("  " + k + ": " + rendered + ",\n")
     out.write("};")
     return out.getvalue()
 
