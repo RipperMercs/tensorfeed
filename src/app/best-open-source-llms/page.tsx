@@ -18,10 +18,10 @@ const models = [
   {
     name: 'Kimi K3',
     company: 'Moonshot AI',
-    parameters: '2.8T total (roughly 16B active per token, 896 experts)',
+    parameters: '2.8T total (104B active per token, 896 experts, 16 routed plus 2 shared)',
     architecture: 'Mixture of Experts (MoE), native MXFP4',
     contextWindow: '1M tokens',
-    license: 'Modified MIT',
+    license: 'Kimi K3 License',
     released: 'July 2026',
     highlights: [
       'Largest open-weight model ever shipped at 2.8 trillion parameters',
@@ -314,7 +314,7 @@ export default function BestOpenSourceLLMsPage() {
         title="Best Open Source LLMs in 2026"
         description="Compare the best open source large language models in 2026: Kimi K3, Qwen3.8-27B, poolside Laguna S 2.1, Llama 4, DeepSeek V4, Mistral, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
-        dateModified="2026-08-16"
+        dateModified="2026-08-26"
       />
 
       <ItemListJsonLd
@@ -324,7 +324,7 @@ export default function BestOpenSourceLLMsPage() {
         items={models.map((model) => ({ name: model.name }))}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: August 16, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: August 26, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best Open Source LLMs in 2026
@@ -332,9 +332,10 @@ export default function BestOpenSourceLLMsPage() {
 
       <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
         <p className="text-text-secondary text-base leading-relaxed">
-          The best open-source LLMs in 2026 are Meta&apos;s Llama 4 (best overall performance),
-          DeepSeek V4 Pro (near-frontier quality under MIT license), and Mistral models (best for European compliance).
-          All can be run locally with tools like Ollama, vLLM, or Hugging Face Transformers.
+          The strongest open-source LLMs in 2026 are Moonshot&apos;s Kimi K3 (the largest open-weight model
+          published, at 2.8T total parameters with 104B active), DeepSeek V4 Pro and Z.ai&apos;s GLM-5.3-Flash
+          (near-frontier quality under plain MIT terms), and Qwen3.8-27B (the most capable model that still
+          fits on a single consumer GPU). All can be run locally with tools like Ollama, vLLM, or Hugging Face Transformers.
         </p>
       </div>
 
