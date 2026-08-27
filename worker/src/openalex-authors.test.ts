@@ -19,6 +19,54 @@ function makeKv(): { kv: any; store: Map<string, string> } {
 }
 
 describe('openalex-authors: buildSnapshot', () => {
+
+  it('omits zero-footprint records and closes the resulting rank gaps', () => {
+    // OpenAlex registers organizations, patent-assignee placeholders and even
+    // software as authors. Observed live: "Assignee Research" with 8,366 works
+    // in a year against 2 citations, plus "Gemini 3.1 (Flash)" and
+    // "Chatterbox TTS". Zero citations AND a zero h-index is a shape test for
+    // "not a researcher", not a quality threshold.
+    const aggregates = [
+      { openalex_id: 'A1', ai_works_last_year: 8366 },  // placeholder, drops
+      { openalex_id: 'A2', ai_works_last_year: 500 },   // real, kept
+      { openalex_id: 'A3', ai_works_last_year: 300 },   // model-as-author, drops
+      { openalex_id: 'A4', ai_works_last_year: 100 },   // real, kept
+    ];
+    const details = new Map<string, any>([
+      ['A1', { id: 'A1', display_name: 'Assignee Research', works_count: 9000, cited_by_count: 0, summary_stats: { h_index: 0 } }],
+      ['A2', { id: 'A2', display_name: 'Real Researcher', works_count: 600, cited_by_count: 27845, summary_stats: { h_index: 64 } }],
+      ['A3', { id: 'A3', display_name: 'Gemini 3.1 (Flash)', works_count: 300, cited_by_count: 0, summary_stats: { h_index: 0 } }],
+      ['A4', { id: 'A4', display_name: 'Another Researcher', works_count: 150, cited_by_count: 900, summary_stats: { h_index: 15 } }],
+    ]);
+
+    const snap = buildSnapshot(aggregates, details);
+
+    expect(snap.authors.map(a => a.display_name)).toEqual(['Real Researcher', 'Another Researcher']);
+    // ranks must be contiguous, not 2 and 4
+    expect(snap.authors.map(a => a.rank)).toEqual([1, 2]);
+    expect(snap.notes.some(n => n.includes('zero citations'))).toBe(true);
+  });
+
+  it('keeps a cited author whose h-index is missing from summary_stats', () => {
+    // Only the BOTH-zero case is a non-person signal. A record with real
+    // citations but no h_index must survive, or the filter starts deleting
+    // researchers whose stats block is incomplete.
+    const aggregates = [{ openalex_id: 'A1', ai_works_last_year: 40 }];
+    const details = new Map<string, any>([
+      ['A1', { id: 'A1', display_name: 'Cited No Stats', works_count: 90, cited_by_count: 500 }],
+    ]);
+    const snap = buildSnapshot(aggregates, details);
+    expect(snap.authors).toHaveLength(1);
+    expect(snap.authors[0].h_index).toBeNull();
+  });
+
+  it('always attaches the disambiguation caveat', () => {
+    const snap = buildSnapshot(
+      [{ openalex_id: 'A1', ai_works_last_year: 10 }],
+      new Map<string, any>([['A1', { id: 'A1', display_name: 'X', works_count: 20, cited_by_count: 100, summary_stats: { h_index: 5 } }]]),
+    );
+    expect(snap.notes.some(n => n.includes('disambiguation'))).toBe(true);
+  });
   it('joins aggregates with details and derives ai_share_pct', () => {
     const aggregates = [
       { openalex_id: 'A1', ai_works_last_year: 50 },
@@ -58,6 +106,7 @@ describe('openalex-authors: buildSnapshot', () => {
       ['A1', {
         id: 'A1',
         display_name: 'X',
+        cited_by_count: 400,
         affiliations: [
           { institution: { id: 'I1', display_name: 'Lab One', country_code: 'US' } },
           { institution: { id: 'I2', display_name: 'Lab Two', country_code: 'GB' } },
@@ -74,7 +123,7 @@ describe('openalex-authors: buildSnapshot', () => {
       { openalex_id: 'A2', ai_works_last_year: 30 },
     ];
     const details = new Map([
-      ['A1', { id: 'A1', display_name: 'Only One' }],
+      ['A1', { id: 'A1', display_name: 'Only One', cited_by_count: 400 }],
     ]);
     const snap = buildSnapshot(aggregates, details);
     expect(snap.authors).toHaveLength(1);
@@ -83,7 +132,7 @@ describe('openalex-authors: buildSnapshot', () => {
 
   it('returns null ai_share_pct when total works is zero or missing', () => {
     const aggregates = [{ openalex_id: 'A1', ai_works_last_year: 5 }];
-    const details = new Map([['A1', { id: 'A1', display_name: 'X' }]]);   // no works_count
+    const details = new Map([['A1', { id: 'A1', display_name: 'X', cited_by_count: 400 }]]);   // no works_count
     const snap = buildSnapshot(aggregates, details);
     expect(snap.authors[0].ai_share_pct).toBeNull();
   });

@@ -7,7 +7,6 @@ import ResearchSubNav from '@/components/research/ResearchSubNav';
 import {
   useArxivLatest,
   useMilestones,
-  useAuthors,
   useCitationVelocity,
   useEmergingKeywords,
   useInstitutions,
@@ -19,7 +18,6 @@ import {
 import BackgroundParticles from '@/components/research/BackgroundParticles';
 import HeroConstellation from '@/components/research/HeroConstellation';
 import KnowledgeLandscape from '@/components/research/KnowledgeLandscape';
-import AuthorsPanel from '@/components/research/AuthorsPanel';
 import InstitutionsPanel from '@/components/research/InstitutionsPanel';
 import Firehose from '@/components/research/Firehose';
 import { useResearchTweaks } from '@/components/research/useResearchTweaks';
@@ -66,7 +64,6 @@ function SkeletonGrid({ count = 6 }: { count?: number }) {
 export default function ResearchHubClient() {
   const arxiv = useArxivLatest(9);
   const milestones = useMilestones(6);
-  const authors = useAuthors(10);
   const velocity = useCitationVelocity(6);
   const keywords = useEmergingKeywords(24);
   const institutions = useInstitutions(8);
@@ -145,7 +142,7 @@ export default function ResearchHubClient() {
             AI Research Hub
           </h1>
           <p className="text-white/85 leading-relaxed drop-shadow text-sm sm:text-base max-w-3xl">
-            Live AI research signal pulled from arXiv, OpenAlex, and the TensorFeed extraction pipeline. Milestone papers flagged by an offline pass. Top authors ranked by 365-day output. Papers gaining citations fastest right now. Emerging keyphrases. The daily arXiv firehose.
+            Live AI research signal pulled from arXiv, OpenAlex, and the TensorFeed extraction pipeline. Milestone papers flagged by an offline pass. Top research institutions by 365-day AI output. Papers gaining citations fastest right now. Emerging keyphrases. The daily arXiv firehose.
           </p>
           <p className="text-white/65 leading-relaxed drop-shadow text-xs sm:text-sm mt-3 max-w-3xl">
             Every signal here is also served as a machine-readable API endpoint for AI agents. One product surfaced two ways: a human-readable library + a paid agent feed.
@@ -253,10 +250,23 @@ export default function ResearchHubClient() {
         )}
       </section>
 
-      {/* Two-column: Authors + Institutions panels (redesigned with
-          category pills + h-index bars + cyan/green works gradient). */}
-      <section className="mb-12 grid gap-6 lg:grid-cols-2">
-        <AuthorsPanel authors={authors} />
+      {/* Institutions panel.
+
+          AuthorsPanel is intentionally not rendered here. Ranking authors by
+          works-per-OpenAlex-author-id measures name disambiguation more than
+          research output: high-collision names merge many distinct researchers
+          into one inflated record and take every top slot, while OpenAlex also
+          registers organizations, patent-assignee placeholders and even models
+          ("Gemini 3.1 (Flash)", "Chatterbox TTS") as authors. The zero-footprint
+          filter in openalex-authors.ts removes the latter, but nothing fixes the
+          former without changing the metric, so TF does not publish the ranking.
+          /api/research/authors still serves it with a data_quality: degraded
+          marker for existing consumers.
+
+          To restore: re-add the AuthorsPanel import and the useAuthors hook,
+          render <AuthorsPanel authors={authors} /> below, and put this section
+          back to `grid gap-6 lg:grid-cols-2`. */}
+      <section className="mb-12">
         <InstitutionsPanel institutions={institutions} />
       </section>
 

@@ -22,5 +22,6 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "worker", "mcp-server", "functions"]
+  "//exclude-note": "seed-openalex-snapshots.ts deliberately imports worker/src builders so a manually seeded snapshot cannot drift from the cron's shape. Excluding the `worker` dir does not stop TS following those imports, and worker code needs Cloudflare's ambient types (KVNamespace, R2Bucket) that this program does not load, so the file is excluded by name. It runs via tsx and is typechecked by worker/tsconfig.json instead.",
+  "exclude": ["node_modules", "worker", "mcp-server", "functions", "scripts/seed-openalex-snapshots.ts"]
 }

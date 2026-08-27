@@ -6512,7 +6512,21 @@ export default {
         );
       }
       const clipped = { ...snapshot, authors: (snapshot.authors ?? []).slice(0, 25) };
-      return jsonResponse({ ok: true, ...clipped }, 200, 1800);
+      // Honest health marker. This ranking is known-degraded: ordering by
+      // works-per-OpenAlex-author-id measures name disambiguation as much as
+      // research output, so high-collision names merge many researchers into
+      // one inflated record while distinctive names do not. The panel is
+      // hidden on /research for the same reason. Served rather than removed so
+      // existing consumers keep a stable contract, but never without the
+      // caveat attached.
+      const dataQuality = {
+        status: 'degraded' as const,
+        reason:
+          'Ranking by publication volume per OpenAlex author id reflects author disambiguation as much as research output. High-collision names merge multiple distinct researchers into a single record and dominate the ranking.',
+        safe_to_cite: false,
+        recommended_alternative: '/api/research/institutions/ai',
+      };
+      return jsonResponse({ ok: true, data_quality: dataQuality, ...clipped }, 200, 1800);
     }
 
     if (path === '/api/research/citation-velocity') {

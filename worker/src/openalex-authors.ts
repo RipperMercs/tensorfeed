@@ -208,6 +208,7 @@ export function buildSnapshot(
   const notes: string[] = [];
   const rows: AIAuthorEntry[] = [];
   let missing = 0;
+  let nonPerson = 0;
 
   for (let i = 0; i < aggregates.length; i++) {
     const a = aggregates[i];
@@ -216,12 +217,28 @@ export function buildSnapshot(
       missing += 1;
       continue;
     }
+    // Drop records with no research footprint at all. OpenAlex registers
+    // organizations, patent-assignee placeholders, and even software as
+    // "authors": observed examples include "Assignee Research",
+    // "Association for Computational Linguistics", "SOVEREIGN Research
+    // Kernel", "Chatterbox TTS" and "Gemini 3.1 (Flash)", several of them
+    // carrying thousands of works in a single year. An author record with
+    // zero citations AND a zero h-index is definitionally not a researcher,
+    // so this is a shape test rather than a quality threshold.
+    const citedBy = typeof d.cited_by_count === 'number' ? d.cited_by_count : 0;
+    const hIndex = typeof d.summary_stats?.h_index === 'number' ? d.summary_stats.h_index : 0;
+    if (citedBy === 0 && hIndex === 0) {
+      nonPerson += 1;
+      continue;
+    }
     const totalWorks = typeof d.works_count === 'number' ? d.works_count : null;
     const aiShare = totalWorks && totalWorks > 0
       ? Math.min(1, a.ai_works_last_year / totalWorks)
       : null;
     rows.push({
-      rank: i + 1,
+      // Derived from rows.length, not the loop index: skipped entries would
+      // otherwise leave gaps in the ranking (1, 2, 4, 7 ...).
+      rank: rows.length + 1,
       openalex_id: a.openalex_id,
       display_name: d.display_name ?? a.openalex_id,
       orcid: d.orcid ?? null,
@@ -237,6 +254,18 @@ export function buildSnapshot(
   if (missing > 0) {
     notes.push(`${missing} author(s) had aggregate counts but no enrichment lookup; omitted from output`);
   }
+  if (nonPerson > 0) {
+    notes.push(
+      `${nonPerson} record(s) with zero citations and a zero h-index were omitted: OpenAlex registers organizations, patent-assignee placeholders and software as authors`,
+    );
+  }
+  // Standing caveat. Ranking by works-per-author-id measures OpenAlex author
+  // disambiguation as much as research output: common names merge many distinct
+  // researchers into one record and dominate the top of the list, while authors
+  // with distinctive names do not accumulate the same inflated counts.
+  notes.push(
+    'Volume ranking is affected by OpenAlex author disambiguation. High-collision names merge multiple researchers into a single record, so ai_works_last_year is an upper bound rather than one person output.',
+  );
 
   return {
     capturedAt: new Date().toISOString(),
