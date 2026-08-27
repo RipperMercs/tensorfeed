@@ -73,6 +73,17 @@ def gen_benchmarks(data):
     return out.getvalue()
 
 
+def gen_nested(d, indent):
+    """Render a dict across multiple lines, one key per line."""
+    pad = " " * indent
+    inner = " " * (indent + 2)
+    lines = ["{"]
+    for k, v in d.items():
+        lines.append(inner + k + ": " + val(v) + ",")
+    lines.append(pad + "}")
+    return "\n".join(lines)
+
+
 def gen_pricing(data):
     out = io.StringIO()
     out.write("export const BASELINE_PRICING: PricingData = {\n")
@@ -88,6 +99,13 @@ def gen_pricing(data):
         out.write("      ],\n")
         out.write("    },\n")
     out.write("  ],\n")
+    # Emit every remaining top-level key (pricingNotes and any future sibling)
+    # rather than a fixed list, so nothing is silently dropped from the mirror.
+    for k, v in data.items():
+        if k in ("lastUpdated", "providers"):
+            continue
+        rendered = gen_nested(v, 2) if isinstance(v, dict) else val(v)
+        out.write("  " + k + ": " + rendered + ",\n")
     out.write("};")
     return out.getvalue()
 

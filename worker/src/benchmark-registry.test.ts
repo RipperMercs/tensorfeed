@@ -17,9 +17,9 @@ import { BENCHMARK_REGISTRY, BENCHMARK_REGISTRY_LAST_UPDATED } from './benchmark
  * agents.
  */
 const PINNED = {
-  digest: 'a22ca67201a51e1f',
-  lastUpdated: '2026-05-03',
-  entries: 24,
+  digest: '7aa6a8e51fdb0827',
+  lastUpdated: '2026-08-26',
+  entries: 33,
 };
 
 describe('BENCHMARK_REGISTRY freshness claim', () => {

@@ -38,9 +38,9 @@
       "notes": "Agent-only work directory and the ARB-backed agent surface. Refresh data/agents-directory.json when notable new agent products ship or when categories shift. Reminder issue opens every other Monday via biweekly-agents-directory-check workflow."
     },
     "/benchmarks": {
-      "last_reviewed": "2026-07-24",
+      "last_reviewed": "2026-08-26",
       "cadence": "weekly",
-      "notes": "data/benchmarks.json. Add a row when a flagship lands or when benchmark rankings materially shift. Reminder issue opens Mondays via existing weekly-benchmarks-check workflow."
+      "notes": "data/benchmarks.json. Add a row when a flagship lands or when benchmark rankings materially shift. Reminder issue opens Mondays via existing weekly-benchmarks-check workflow. Scores are a mix of vendor-reported and independent-evaluator figures and the schema does not yet record which, so verify provenance before citing a single cell."
     },
     "/podcasts": {
       "last_reviewed": "2026-05-21",
