@@ -128,9 +128,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/research/papers`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/research/state-of-ai-agent-data-2026`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/research/milestones`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/research/authors`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/research/citation-velocity`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
-    { url: `${baseUrl}/research/conference-acceptances`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
+    // Frozen archive through the 2025 season: still indexable and citable, but
+    // it no longer updates, so it must not advertise a daily change frequency.
+    { url: `${baseUrl}/research/conference-acceptances`, lastModified: now, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${baseUrl}/research/nlp-proceedings`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     { url: `${baseUrl}/research/lab-blogs`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     { url: `${baseUrl}/research/topics`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },

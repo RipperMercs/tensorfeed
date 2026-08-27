@@ -6555,7 +6555,26 @@ export default {
         );
       }
       const clipped = { ...snapshot, papers: (snapshot.papers ?? []).slice(0, 50) };
-      return jsonResponse({ ok: true, ...clipped }, 200, 1800);
+      // Frozen, NOT degraded. These are genuine Oral and Spotlight acceptances
+      // and stay citable for the seasons they cover, so safe_to_cite is true.
+      // What stopped is the updating: OpenReview began returning an HTTP 403
+      // ChallengeRequiredError on every /notes query (reproduced from a
+      // residential IP, so it is not a Cloudflare egress problem), and the
+      // refresher correctly refuses to overwrite last-known-good with an empty
+      // result. The snapshot's own note still claims the venue list is
+      // "refreshed each conference season", which is no longer true, so the
+      // marker below is what a consumer should believe.
+      const dataQuality = {
+        status: 'frozen' as const,
+        reason:
+          'OpenReview returns an HTTP 403 challenge to automated queries, so no new conference decisions can be ingested. Records are real Oral and Spotlight acceptances and remain accurate for the seasons they cover, but the venue list stops at the 2025 season and nothing newer will appear.',
+        safe_to_cite: true,
+        frozen_since: snapshot.capturedAt ?? null,
+        supersedes_note:
+          'Ignore any note in this payload claiming the venue list is refreshed each conference season.',
+        recommended_alternative: '/api/research/nlp-proceedings',
+      };
+      return jsonResponse({ ok: true, data_quality: dataQuality, ...clipped }, 200, 1800);
     }
 
     if (path === '/api/research/lab-blogs') {
@@ -15235,7 +15254,29 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/research/authors', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
-      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
+      // Never charged. The ranking is withdrawn: ordering by works-per-OpenAlex
+      // -author-id measures name disambiguation rather than research output, so
+      // high-collision names merge many researchers into one inflated record
+      // and take every top slot. That is precisely known_data_defect ("we hold
+      // records and have identified them as unusable"), not stale_data. The
+      // response is still served so an existing integration does not break, but
+      // selling it would be selling a known artifact.
+      const authorsDataQuality = {
+        status: 'withdrawn' as const,
+        reason:
+          'Ranking by publication volume per OpenAlex author id reflects author disambiguation as much as research output. High-collision names merge multiple distinct researchers into a single record and dominate the ranking, and OpenAlex additionally registers organizations, patent-assignee placeholders and models as authors.',
+        safe_to_cite: false,
+        charged: false,
+        recommended_alternative: '/api/premium/research/lab-productivity',
+      };
+      return await premiumResponse(
+        { ok: true, data_quality: authorsDataQuality, ...snapshot },
+        payment,
+        1,
+        request,
+        env,
+        'known_data_defect',
+      );
     }
 
     // === PAID PREMIUM: OPENALEX AI CITATION VELOCITY (Tier 1, 1 credit) ===

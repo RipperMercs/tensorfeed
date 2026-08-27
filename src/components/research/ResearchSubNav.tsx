@@ -7,11 +7,9 @@ const NAV = [
   { href: '/research', label: 'Overview' },
   { href: '/research/papers', label: 'Latest Papers' },
   { href: '/research/milestones', label: 'Milestones' },
-  { href: '/research/authors', label: 'Authors' },
   { href: '/research/citation-velocity', label: 'Citation Velocity' },
   { href: '/research/topics', label: 'Emerging Topics' },
   { href: '/research/institutions', label: 'Institutions' },
-  { href: '/research/conference-acceptances', label: 'Conferences' },
   { href: '/research/nlp-proceedings', label: 'NLP Papers' },
   { href: '/research/lab-blogs', label: 'Lab Blogs' },
 ];

@@ -42,7 +42,7 @@ export default function ResearchPage() {
             '@type': 'ItemList',
             name: 'AI Research Signal Sections',
             description:
-              'Six live data feeds covering AI research output. The ItemList describes the hub sections; the underlying paper data is served via the /api/premium/research/* endpoints.',
+              'Five live data feeds covering AI research output. The ItemList describes the hub sections; the underlying paper data is served via the /api/premium/research/* endpoints. The authors leaderboard was withdrawn and the conference-acceptances feed is a frozen archive, so neither is listed here.',
             itemListElement: [
               {
                 '@type': 'ListItem',
@@ -59,24 +59,18 @@ export default function ResearchPage() {
               {
                 '@type': 'ListItem',
                 position: 3,
-                name: 'Top AI Authors',
-                url: 'https://tensorfeed.ai/research/authors',
-              },
-              {
-                '@type': 'ListItem',
-                position: 4,
                 name: 'Top AI Institutions',
                 url: 'https://tensorfeed.ai/research/institutions',
               },
               {
                 '@type': 'ListItem',
-                position: 5,
+                position: 4,
                 name: 'Emerging Keywords',
                 url: 'https://tensorfeed.ai/research/topics',
               },
               {
                 '@type': 'ListItem',
-                position: 6,
+                position: 5,
                 name: 'Latest arXiv (Last 24h)',
                 url: 'https://tensorfeed.ai/research/papers',
               },
