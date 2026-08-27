@@ -6519,10 +6519,14 @@ export default {
       // hidden on /research for the same reason. Served rather than removed so
       // existing consumers keep a stable contract, but never without the
       // caveat attached.
+      // 'withdrawn', matching /research/authors and the premium sibling. An
+      // earlier pass said 'degraded' here, which described the same feed with a
+      // softer word than the other two surfaces used. The point of this marker
+      // is that a consumer gets one answer wherever they look.
       const dataQuality = {
-        status: 'degraded' as const,
+        status: 'withdrawn' as const,
         reason:
-          'Ranking by publication volume per OpenAlex author id reflects author disambiguation as much as research output. High-collision names merge multiple distinct researchers into a single record and dominate the ranking.',
+          'Ranking by publication volume per OpenAlex author id reflects author disambiguation as much as research output. High-collision names merge multiple distinct researchers into a single record and dominate the ranking, and OpenAlex additionally registers organizations, patent-assignee placeholders and models as authors.',
         safe_to_cite: false,
         recommended_alternative: '/api/research/institutions/ai',
       };
