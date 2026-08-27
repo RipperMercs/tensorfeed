@@ -115,3 +115,6 @@ widget-fix-*.png
 
 # Transient work / file-handoff directory (Drive-backed scratch, never source)
 tensorfeed-work/
+
+# Local OpenAlex snapshot build output (scripts/seed-openalex-snapshots.ts)
+.openalex-seed/

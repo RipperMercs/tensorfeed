@@ -32,7 +32,17 @@ import { fetchOpenAlexWithRetry } from './openalex-fetch';
  */
 
 const OPENALEX_BASE = 'https://api.openalex.org';
-const AI_CONCEPT_ID = 'C154945302';
+// Curated AI-subfield concepts, matching openalex-research.ts. Previously this
+// used the broad level-1 "Artificial intelligence" parent (C154945302), whose
+// tag is inherited so liberally that the leaderboard was topped by plasma
+// physicists at the National Institute for Fusion Science and a taxonomist at
+// the DSMZ microorganism collection, credited with 120,000+ "AI works" in a
+// single year. That is the same over-tagging artifact openalex-research.ts
+// documents and avoids, and it is nonsensical on a per-AUTHOR board where no
+// human publishes six figures of papers a year.
+//   C119857082 = Machine learning (level 1)
+//   C108583219 = Deep learning (level 2)
+const AI_CONCEPT_ID = 'C119857082|C108583219';
 const POLITE_UA = 'tensorfeed-research/1.0 (mailto:legal@tensorfeed.ai; +https://tensorfeed.ai)';
 
 const CURRENT_KEY = 'openalex-ai-authors:current';
