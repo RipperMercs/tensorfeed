@@ -434,7 +434,7 @@ export const BASELINE_PRICING: PricingData = {
 };
 
 export const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-08-26',
+  lastUpdated: '2026-08-27',
   benchmarks: [
     { id: 'swe_bench', name: 'SWE-bench', description: 'Real-world software engineering tasks from GitHub issues (SWE-bench Verified)', maxScore: 100 },
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
@@ -447,6 +447,35 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { id: 'hle_tools', name: "Humanity's Last Exam (tools)", description: 'Multidisciplinary expert-level reasoning with tool access', maxScore: 100 },
   ],
   models: [
+    {
+      model: 'Qwen3.8 2.4T-A95B', provider: 'Alibaba', released: '2026-08', scores: { gpqa_diamond: 92.6, hle_tools: 56.2 },
+      provenance: {
+        gpqa_diamond: { type: 'vendor', by: 'Alibaba', url: 'https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B' },
+        hle_tools: { type: 'vendor', by: 'Alibaba', url: 'https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B' },
+      },
+    },
+    {
+      model: 'Qwen3.8 27B', provider: 'Alibaba', released: '2026-08', scores: { gpqa_diamond: 89.2 },
+      provenance: {
+        gpqa_diamond: { type: 'vendor', by: 'Alibaba', url: 'https://huggingface.co/Qwen/Qwen3.8-27B' },
+      },
+    },
+    {
+      model: 'Muse Glimmer 30B', provider: 'Meta', released: '2026-08', scores: { swe_bench: 76.0, gpqa_diamond: 83.5 },
+      provenance: {
+        swe_bench: { type: 'vendor', by: 'Meta', url: 'https://huggingface.co/meta-models/Muse-Glimmer-30B' },
+        gpqa_diamond: { type: 'vendor', by: 'Meta', url: 'https://huggingface.co/meta-models/Muse-Glimmer-30B' },
+      },
+    },
+    {
+      model: 'Nemotron 3.5 Lightning', provider: 'NVIDIA', released: '2026-08', scores: { swe_bench: 51.56, mmlu_pro: 81.94, gpqa_diamond: 75.44, browsecomp: 36.97 },
+      provenance: {
+        swe_bench: { type: 'vendor', by: 'NVIDIA', url: 'https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16' },
+        mmlu_pro: { type: 'vendor', by: 'NVIDIA', url: 'https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16' },
+        gpqa_diamond: { type: 'vendor', by: 'NVIDIA', url: 'https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16' },
+        browsecomp: { type: 'vendor', by: 'NVIDIA', url: 'https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16' },
+      },
+    },
     {
       model: 'Gemini 3.7 Flash', provider: 'Google', released: '2026-08', scores: { gpqa_diamond: 94.5, osworld_2: 47.9 },
       provenance: {
