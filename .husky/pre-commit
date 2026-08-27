@@ -47,3 +47,31 @@ if git diff --cached --name-only | grep -qE '^(src/app/originals/|src/lib/origin
     exit 1
   fi
 fi
+
+# Model-catalog / benchmark coverage gate. data/pricing.json, data/benchmarks.json
+# and the BASELINE_* mirror in worker/src/catalog.ts are three hand-maintained
+# files that must agree, and until 2026-08-27 nothing related them at commit time.
+# Two failures came from exactly that:
+#   1. Adding a flagship-tier model to pricing.json with no benchmarks.json row
+#      turns the daily drift audit red the moment it deploys, because
+#      data-freshness.ts marks the dataset stale on "leaderboard predates
+#      <newest catalog flagship>". Age is not involved, so it is invisible in
+#      the lastUpdated stamp. Hit on 2026-08-27 with Qwen3.8 2.4T-A95B.
+#   2. Editing benchmarks.json without re-running scripts/sync-baselines.py
+#      leaves the worker mirror behind, and the API serves the old set. Hit on
+#      2026-05-24, which shipped April data for weeks.
+# Both are caught by worker tests that read the canonical files directly. Runs in
+# under two seconds and only when one of those files is staged.
+CATALOG_GUARDS="src/benchmark-coverage.test.ts src/catalog-benchmarks-sync.test.ts src/catalog-pricing-sync.test.ts"
+if git diff --cached --name-only | grep -qE '^(data/pricing[.]json|data/benchmarks[.]json|worker/src/catalog[.]ts)$'; then
+  if ! GUARD_OUT=$(cd worker && NO_COLOR=1 npx vitest run $CATALOG_GUARDS 2>&1); then
+    echo "COMMIT BLOCKED: model catalog / benchmark guards failed."
+    echo ""
+    echo "$GUARD_OUT" | head -30
+    echo "$GUARD_OUT" | grep -E "^ *Tests "
+    echo ""
+    echo "If data/benchmarks.json or data/pricing.json changed, re-sync the worker"
+    echo "mirror first:  python scripts/sync-baselines.py"
+    exit 1
+  fi
+fi
