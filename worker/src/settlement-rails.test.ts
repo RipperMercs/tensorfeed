@@ -11,7 +11,9 @@ import {
   CDP_FACILITATOR,
   RAILS,
   RefreshInputs,
+  evmRpcUrl,
 } from './settlement-rails';
+import { Env } from './types';
 
 const FULL_INPUTS: RefreshInputs = {
   capturedAt: '2026-06-27T00:00:00.000Z',
@@ -249,5 +251,40 @@ describe('USDC_TRANSFER_GAS_UNITS constant', () => {
   it('is a representative USDC transfer gas figure', () => {
     expect(USDC_TRANSFER_GAS_UNITS).toBeGreaterThan(40000);
     expect(USDC_TRANSFER_GAS_UNITS).toBeLessThan(70000);
+  });
+});
+
+describe('evmRpcUrl', () => {
+  const base = RAILS.find((r) => r.id === 'base')!;
+  const robinhood = RAILS.find((r) => r.id === 'robinhood')!;
+  const solana = RAILS.find((r) => r.id === 'solana')!;
+
+  it('prefers the keyed RPC when the env var is set', () => {
+    const env = { BASE_RPC_URL: 'https://keyed.example/base' } as unknown as Env;
+    expect(evmRpcUrl(base, env)).toBe('https://keyed.example/base');
+  });
+
+  it('falls back to the public node when the var is unset', () => {
+    expect(evmRpcUrl(base, {} as unknown as Env)).toBe(base.rpc_default);
+  });
+
+  it('falls back when the var is set but empty', () => {
+    const env = { ROBINHOOD_RPC_URL: '' } as unknown as Env;
+    expect(evmRpcUrl(robinhood, env)).toBe(robinhood.rpc_default);
+  });
+
+  it('reads each rail from its own env var, not a shared one', () => {
+    const env = { BASE_RPC_URL: 'https://keyed.example/base' } as unknown as Env;
+    expect(evmRpcUrl(robinhood, env)).toBe(robinhood.rpc_default);
+  });
+
+  it('gives every EVM rail an env key so none is stuck on a throttled public node', () => {
+    for (const r of RAILS.filter((x) => x.vm === 'evm')) {
+      expect(r.rpc_env_key, `rail ${r.id} has no rpc_env_key`).toBeTruthy();
+    }
+  });
+
+  it('leaves the Solana rail to solanaRpcUrl', () => {
+    expect(solana.rpc_env_key).toBeUndefined();
   });
 });

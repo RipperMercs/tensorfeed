@@ -43,6 +43,15 @@ export interface Env {
   // else the public mainnet-beta node. Read-only, low volume, optional.
   SOLANA_RPC_URL?: string;
   HELIUS_API_KEY?: string;
+  // Optional keyed RPCs for the settlement-rails EVM gas fetch. The public
+  // nodes throttle the Worker's shared Cloudflare egress, so a rail with no
+  // keyed endpoint is the one that reports a null gas price in production.
+  // Base reuses BASE_RPC_URL: eth_gasPrice has no getLogs span limit, so the
+  // payments RPC serves it fine.
+  POLYGON_RPC_URL?: string;
+  ARBITRUM_RPC_URL?: string;
+  ROBINHOOD_RPC_URL?: string;
+  AVALANCHE_RPC_URL?: string;
   // Cross-Worker validate-and-charge (sister-site integration)
   SHARED_INTERNAL_SECRET?: string;
   // Pages Functions middleware -> Worker bot-hit ingest auth

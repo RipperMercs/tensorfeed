@@ -572,3 +572,14 @@ PAYMENT_CLAIM_ENABLED = "true"
 # endpoint in BASE_INDEXER_RPC_URL with a high span (fewer calls per tick).
 # BASE_INDEXER_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/<key>"  # then raise the span below
 BASE_RPC_GETLOGS_SPAN = "10"
+#
+# settlement-rails gas fetch (free /api/settlement-rails + the premium rail
+# verdict) resolves each EVM rail's RPC as its own keyed var, then the public
+# node. The public nodes throttle the Worker's shared Cloudflare egress, which
+# is why an unkeyed rail reports a null raw cost. Base reuses BASE_RPC_URL
+# (eth_gasPrice has no getLogs span limit, so the 10-block cap does not matter).
+# All optional, all read-only, all low volume:
+#   wrangler secret put POLYGON_RPC_URL
+#   wrangler secret put ARBITRUM_RPC_URL
+#   wrangler secret put ROBINHOOD_RPC_URL
+#   wrangler secret put AVALANCHE_RPC_URL

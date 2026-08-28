@@ -37,6 +37,18 @@ import { Env } from './types';
 
 export type RailVm = 'evm' | 'svm';
 
+/**
+ * Env vars that may hold a keyed RPC for an EVM rail. The public nodes throttle
+ * the Worker's shared Cloudflare egress, so an unkeyed rail is the one whose
+ * gas price comes back null in production.
+ */
+export type RailRpcEnvKey =
+  | 'BASE_RPC_URL'
+  | 'POLYGON_RPC_URL'
+  | 'ARBITRUM_RPC_URL'
+  | 'ROBINHOOD_RPC_URL'
+  | 'AVALANCHE_RPC_URL';
+
 export interface RailDef {
   id: string;
   label: string;
@@ -45,6 +57,9 @@ export interface RailDef {
   native_token: string;
   native_price_pair: string; // Coinbase spot pair, e.g. ETH-USD
   rpc_default: string;
+  // Preferred over rpc_default when the var is set. Solana has the same
+  // treatment via solanaRpcUrl.
+  rpc_env_key?: RailRpcEnvKey;
   is_l2: boolean;
   cdp_supported: boolean;
   finality_soft_seconds: number;
@@ -95,6 +110,7 @@ export const RAILS: RailDef[] = [
     native_token: 'ETH',
     native_price_pair: 'ETH-USD',
     rpc_default: 'https://mainnet.base.org',
+    rpc_env_key: 'BASE_RPC_URL',
     is_l2: true,
     cdp_supported: true,
     finality_soft_seconds: 2,
@@ -125,6 +141,7 @@ export const RAILS: RailDef[] = [
     native_token: 'POL',
     native_price_pair: 'POL-USD',
     rpc_default: 'https://polygon-rpc.com',
+    rpc_env_key: 'POLYGON_RPC_URL',
     is_l2: false,
     cdp_supported: true,
     finality_soft_seconds: 5,
@@ -140,6 +157,7 @@ export const RAILS: RailDef[] = [
     native_token: 'ETH',
     native_price_pair: 'ETH-USD',
     rpc_default: 'https://arb1.arbitrum.io/rpc',
+    rpc_env_key: 'ARBITRUM_RPC_URL',
     is_l2: true,
     cdp_supported: true,
     finality_soft_seconds: 0.25,
@@ -155,6 +173,7 @@ export const RAILS: RailDef[] = [
     native_token: 'ETH',
     native_price_pair: 'ETH-USD',
     rpc_default: 'https://rpc.mainnet.chain.robinhood.com',
+    rpc_env_key: 'ROBINHOOD_RPC_URL',
     is_l2: true,
     cdp_supported: false,
     finality_soft_seconds: 0.1,
@@ -171,6 +190,7 @@ export const RAILS: RailDef[] = [
     native_token: 'AVAX',
     native_price_pair: 'AVAX-USD',
     rpc_default: 'https://api.avax.network/ext/bc/C/rpc',
+    rpc_env_key: 'AVALANCHE_RPC_URL',
     is_l2: false,
     cdp_supported: false,
     finality_soft_seconds: 1,
@@ -527,6 +547,19 @@ async function fetchEvmGasPriceWei(rpcUrl: string): Promise<number | null> {
   }
 }
 
+/**
+ * The keyed RPC for an EVM rail when one is configured, else the public node.
+ * Mirrors solanaRpcUrl. Without this the fetch always hit the public node,
+ * which throttles Worker egress and left raw cost null for those rails.
+ */
+export function evmRpcUrl(rail: RailDef, env: Env): string {
+  if (rail.rpc_env_key) {
+    const keyed = env[rail.rpc_env_key];
+    if (keyed) return keyed;
+  }
+  return rail.rpc_default;
+}
+
 function solanaRpcUrl(env: Env): string {
   if (env.SOLANA_RPC_URL) return env.SOLANA_RPC_URL;
   if (env.HELIUS_API_KEY) return `https://mainnet.helius-rpc.com/?api-key=${env.HELIUS_API_KEY}`;
@@ -588,7 +621,7 @@ export async function refreshSnapshot(env: Env): Promise<RailsSnapshot> {
   const pricePairs = Array.from(new Set(RAILS.map((r) => r.native_price_pair)));
 
   const [gasResults, solanaCuPrice, priceResults] = await Promise.all([
-    Promise.all(evmRails.map((r) => fetchEvmGasPriceWei(r.rpc_default).then((v) => [r.id, v] as const))),
+    Promise.all(evmRails.map((r) => fetchEvmGasPriceWei(evmRpcUrl(r, env)).then((v) => [r.id, v] as const))),
     fetchSolanaPriorityFee(solanaRpcUrl(env)),
     Promise.all(pricePairs.map((p) => fetchCoinbaseSpot(p).then((v) => [p, v] as const))),
   ]);
