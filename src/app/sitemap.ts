@@ -267,6 +267,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verdicts/trust-ai-found-cves`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/verdicts/frontier-premium-worth-it`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/cyber-defense-letter-116-signers-containment-math`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/thomson-reuters-40m-qwen-two-track-cocounsel`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/jalapeno-benchmarks-watt-win-token-cost-tie`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-monitoring-overhead-20-percent-containment-price`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
