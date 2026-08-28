@@ -13,6 +13,12 @@
      "network": "eip155:8453",
      "asset_symbol": "USDC",
      "note": "USDC on Base mainnet, verified via Base RPC"
+    },
+    {
+     "method": "exact",
+     "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+     "asset_symbol": "USDC",
+     "note": "USDC on Solana mainnet, settled via the CDP facilitator"
     }
    ],
    "evaluating": [
@@ -26684,7 +26690,7 @@
   {
    "resource": {
     "url": "https://tensorfeed.ai/api/premium/settlement/rail-verdict",
-    "description": "Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, and Avalanche, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.",
+    "description": "Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain, and Robinhood Chain, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.",
     "mimeType": "application/json"
    },
    "type": "http",
@@ -26735,10 +26741,10 @@
      }
     }
    ],
-   "lastUpdated": "2026-07-03T00:00:00Z",
+   "lastUpdated": "2026-08-28T00:00:00Z",
    "metadata": {
     "name": "Settlement rail verdict",
-    "description": "Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, and Avalanche, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.",
+    "description": "Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain, and Robinhood Chain, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.",
     "tier": 1,
     "credits": 1,
     "category": "x402-settlement-rails"
@@ -28123,5 +28129,5 @@
    "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
   }
  ],
- "lastUpdated": "2026-08-17T00:00:00Z"
+ "lastUpdated": "2026-08-28T00:00:00Z"
 }

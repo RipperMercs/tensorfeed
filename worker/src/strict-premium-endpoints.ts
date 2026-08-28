@@ -414,7 +414,7 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/funding/federal/momentum',
   // Settlement Rail Verdict (2026-06-27). Recommended x402 settlement rail for a
   // given payment size, fusing live on-chain cost, the CDP facilitator reality,
-  // and finality across Base, Solana, Polygon, Arbitrum, Avalanche. Reads optional
+  // and finality across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain. Reads optional
   // ?payment_usd= and ?prefer=, so strict-premium gates anonymous Bazaar crawlers
   // to a clean 402. Free sibling: /api/settlement-rails.
   '/api/premium/settlement/rail-verdict',

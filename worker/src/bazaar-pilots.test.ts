@@ -169,7 +169,7 @@ const PILOT_PATHS = [
   '/api/premium/procurement/ai-opportunities/deadlines',
   '/api/premium/ai-datacenters/buildout',
   // Wave 43 (2026-06-27): settlement-rail-verdict (recommended x402 settlement
-  // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche)
+  // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain)
   '/api/premium/settlement/rail-verdict',
   // Wave 44 (2026-06-27): counterparty/trust-verdict (signed trust ruling on a
   // counterparty settlement address: sanctions + on-chain presence + TF

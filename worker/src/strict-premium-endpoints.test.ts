@@ -270,7 +270,7 @@ describe('isStrictPremiumPath', () => {
       // change log).
       // + 1 (2026-06-27) settlement/rail-verdict (param-reading ?payment_usd=
       // and ?prefer=, both optional; recommended x402 settlement rail across
-      // Base, Solana, Polygon, Arbitrum, Avalanche).
+      // Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain).
       // + 1 (2026-06-27) counterparty/trust-verdict (param-required ?address=,
       // optional ?agent_id=; signed counterparty trust verdict fusing sanctions
       // + on-chain presence + TF footprint/reputation + a Sybil-safe ERC-8004 leg).

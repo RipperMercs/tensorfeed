@@ -7253,13 +7253,13 @@ const AI_DATACENTERS_BUILDOUT_PILOT: BazaarPilotConfig = {
 };
 
 // Wave 43 (2026-06-27): settlement-rail-verdict. The recommended x402 settlement
-// rail for a given payment size across Base, Solana, Polygon, Arbitrum, Avalanche,
+// rail for a given payment size across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain,
 // fusing live on-chain cost, the CDP facilitator reality (gas sponsored, flat
 // $0.001 after 1000 free settlements per month), and published finality. Free
 // sibling at /api/settlement-rails. Total pilot count: 91 -> 92.
 const SETTLEMENT_RAIL_VERDICT_PILOT: BazaarPilotConfig = {
   description:
-    'Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, and Avalanche, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.',
+    'Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain, and Robinhood Chain, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.',
   extension: {
     bazaar: {
       info: {
@@ -7965,7 +7965,7 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/procurement/ai-opportunities/deadlines': PROCUREMENT_AI_OPPORTUNITIES_DEADLINES_PILOT,
   '/api/premium/ai-datacenters/buildout': AI_DATACENTERS_BUILDOUT_PILOT,
   // Wave 43 (2026-06-27): settlement-rail-verdict. Recommended x402 settlement
-  // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche.
+  // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain.
   // Free sibling at /api/settlement-rails.
   '/api/premium/settlement/rail-verdict': SETTLEMENT_RAIL_VERDICT_PILOT,
   // Wave 44 (2026-06-27): counterparty-trust-verdict. Signed safe-to-transact

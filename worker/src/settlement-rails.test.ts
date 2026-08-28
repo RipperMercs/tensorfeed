@@ -15,7 +15,7 @@ import {
 
 const FULL_INPUTS: RefreshInputs = {
   capturedAt: '2026-06-27T00:00:00.000Z',
-  gasPriceWei: { base: 1e7, polygon: 3e10, arbitrum: 1e7, avalanche: 2.5e10 },
+  gasPriceWei: { base: 1e7, polygon: 3e10, arbitrum: 1e7, avalanche: 2.5e10, robinhood: 4.65e7 },
   solanaCuPriceMicroLamports: 0,
   prices: { 'ETH-USD': 2000, 'SOL-USD': 150, 'POL-USD': 0.5, 'AVAX-USD': 25 },
 };
@@ -109,14 +109,33 @@ describe('buildRailVerdict', () => {
     expect(ids.indexOf('solana')).toBeLessThan(ids.indexOf('base'));
   });
 
-  it('ranks the non-CDP rail (Avalanche) last despite its fast finality', () => {
+  it('ranks every non-CDP rail below every CDP rail despite fast finality', () => {
     const snap = buildSnapshot(FULL_INPUTS);
     const v = buildRailVerdict(snap, 0.01, 'finality');
-    const ids = v.ranking.map((r) => r.id);
-    expect(ids[ids.length - 1]).toBe('avalanche');
+    const cdpIdx = v.ranking.map((r, i) => (r.cdp_supported ? i : -1)).filter((i) => i >= 0);
+    const selfIdx = v.ranking.map((r, i) => (r.cdp_supported ? -1 : i)).filter((i) => i >= 0);
+    expect(cdpIdx.length).toBeGreaterThan(0);
+    expect(selfIdx.length).toBeGreaterThan(0);
+    expect(Math.min(...selfIdx)).toBeGreaterThan(Math.max(...cdpIdx));
     // even though Avalanche has the fastest hard finality of any rail
     const fastest = [...snap.rails].sort((a, b) => a.finality_hard_seconds - b.finality_hard_seconds)[0];
     expect(fastest.id).toBe('avalanche');
+    expect(v.ranking.find((r) => r.id === 'avalanche')!.cdp_supported).toBe(false);
+  });
+
+  it('tracks Robinhood Chain as a self-settle-only EVM rail', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    const rh = snap.rails.find((r) => r.id === 'robinhood')!;
+    expect(rh.caip2).toBe('eip155:4663');
+    expect(rh.vm).toBe('evm');
+    expect(rh.native_token).toBe('ETH');
+    expect(rh.cdp_supported).toBe(false);
+    expect(rh.raw_onchain_cost_usd).toBeGreaterThan(0);
+    expect(snap.cdp_facilitator.supported_rails).not.toContain('robinhood');
+    const v = buildRailVerdict(snap, 0.01, 'balanced');
+    expect(v.ranking.find((r) => r.id === 'robinhood')!.settle_path).toBe('self_settle');
+    // it is never recommended while a CDP rail exists
+    expect(v.recommended_rail.id).not.toBe('robinhood');
   });
 
   it('never recommends a self-settle-only rail when a CDP rail exists', () => {

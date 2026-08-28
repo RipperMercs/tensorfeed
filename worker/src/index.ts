@@ -6962,7 +6962,7 @@ export default {
     // === SETTLEMENT RAILS: cross-chain x402 cost + finality (free) ===
     // /api/settlement-rails
     // Current settlement cost and finality per x402-supported rail (Base,
-    // Solana, Polygon, Arbitrum, Avalanche). Raw on-chain self-settle cost plus
+    // Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain). Raw on-chain self-settle cost plus
     // the CDP facilitator reality (gas sponsored, flat $0.001 after 1000/mo
     // free), plus published finality. Lazily refreshed (~20 min) from live RPC
     // and Coinbase spot prices, 60s in-memory cache, last-known-good fallback so
@@ -14540,7 +14540,7 @@ export default {
     // === PAID PREMIUM: SETTLEMENT RAIL VERDICT (Tier 1, 1 credit) ===
     // /api/premium/settlement/rail-verdict?payment_usd=&prefer=balanced|cost|finality&accepted_rails=
     // The recommended x402 settlement rail for a given payment size, with a full
-    // ranking across Base, Solana, Polygon, Arbitrum, Avalanche. Fuses live raw
+    // ranking across Base, Solana, Polygon, Arbitrum, Avalanche, Robinhood Chain. Fuses live raw
     // on-chain cost with the CDP facilitator reality (gas sponsored, flat $0.001
     // marginal after 1000 free settlements per month) and published finality.
     // Optional ?payment_usd= (default 0.01), ?prefer=, and ?accepted_rails= (a

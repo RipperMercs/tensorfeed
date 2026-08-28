@@ -148,6 +148,22 @@ export const RAILS: RailDef[] = [
     finality_source: 'https://docs.chain.link/ccip/ccip-execution-latency',
   },
   {
+    id: 'robinhood',
+    label: 'Robinhood Chain',
+    caip2: 'eip155:4663',
+    vm: 'evm',
+    native_token: 'ETH',
+    native_price_pair: 'ETH-USD',
+    rpc_default: 'https://rpc.mainnet.chain.robinhood.com',
+    is_l2: true,
+    cdp_supported: false,
+    finality_soft_seconds: 0.1,
+    finality_hard_seconds: 900,
+    finality_note:
+      'About 0.1s block time for sequencer soft confirmation (measured over 100k blocks), roughly 15 min for L1 finality inherited from the Arbitrum stack. Robinhood publishes no finality figure of its own. Not on the CDP facilitator, so self-settle only.',
+    finality_source: 'https://docs.robinhood.com/chain/',
+  },
+  {
     id: 'avalanche',
     label: 'Avalanche C-Chain',
     caip2: 'eip155:43114',
@@ -250,10 +266,11 @@ const SOURCES = [
 ];
 
 const BASE_NOTES = [
-  'Raw EVM cost is execution-layer gas only. For L2 rails (Base, Arbitrum) the L1 data fee is additional and small since EIP-4844 blobs.',
+  'Raw EVM cost is execution-layer gas only. For L2 rails (Base, Arbitrum, Robinhood Chain) the L1 data fee is additional and small since EIP-4844 blobs.',
   'Via the CDP facilitator (the dominant x402 path) gas is sponsored and the marginal cost is a flat $0.001 after 1000 free settlements per month, so among CDP-supported rails the real differentiator is finality, not gas.',
   'Finality figures are published chain characteristics, not live TensorFeed measurements.',
   'Raw Solana cost assumes a single signer self-settle. Through CDP the facilitator is the fee payer.',
+  'Robinhood Chain pays gas in ETH but its native stablecoin is USDG (Paxos) rather than USDC. USDC is deployed on the chain, so the ERC-20 transfer cost above applies, but the dominant stablecoin liquidity there is USDG.',
 ];
 
 /**
