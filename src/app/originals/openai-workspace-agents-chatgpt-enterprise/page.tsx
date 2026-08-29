@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://tensorfeed.ai/originals/openai-workspace-agents-chatgpt-enterprise' },
   title: 'OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform',
   description:
-    'OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, and Edu. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion. The Custom GPT era is over.',
+    'OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, Edu, and Teachers. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion. The Custom GPT era is over.',
   openGraph: {
     title: 'OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform',
     description:
@@ -30,7 +30,7 @@ export default function OpenAIWorkspaceAgentsPage() {
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <ArticleJsonLd
         title="OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform"
-        description="OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, and Edu. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion."
+        description="OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, Edu, and Teachers. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion."
         datePublished="2026-04-26"
         author="Adrian Vale"
       />
