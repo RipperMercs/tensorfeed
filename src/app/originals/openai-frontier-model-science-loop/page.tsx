@@ -237,7 +237,7 @@ export default function OpenAIFrontierModelScienceLoopPage() {
         </p>
 
         <p>
-          The interesting question is who builds the harness. Molecule.one is a four-year-old
+          The interesting question is who builds the harness. Molecule.one is a ten-year-old
           chemistry startup that already had Maria; OpenAI plugged the frontier model into it. Boston
           Children&apos;s built the case corpus and the review process; OpenAI plugged o3 Deep
           Research into that. In both cases the lab brought the model and the domain partner brought
