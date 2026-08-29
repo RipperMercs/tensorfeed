@@ -239,7 +239,7 @@ export default function MetaIrisChipBroadcomNvidiaCeilingPage() {
             wrote up as the closed silicon loop
           </Link>
           , added the second flagship in Q1. Meta MTIA/Iris makes it three. The company&apos;s AI
-          revenue guide for fiscal 2026 was $17 billion at the last update; the run rate implied by
+          revenue guide for fiscal 2026 was $56 billion at the last update; the run rate implied by
           these three programs alone, on multi-year contracts, is closer to $60 billion by 2028.
         </p>
 
