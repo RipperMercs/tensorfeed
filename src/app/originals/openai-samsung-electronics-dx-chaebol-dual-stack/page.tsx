@@ -131,7 +131,7 @@ export default function OpenAISamsungElectronicsDXChaebolDualStackPage() {
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">Korea scope</td>
                 <td className="px-4 py-3 font-mono">All employees</td>
-                <td className="px-4 py-3">Roughly 115,000 Samsung Electronics staff in Korea</td>
+                <td className="px-4 py-3">Roughly 125,000 Samsung Electronics staff in Korea</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">Global scope</td>
