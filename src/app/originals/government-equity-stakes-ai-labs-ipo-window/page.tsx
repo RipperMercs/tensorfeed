@@ -80,7 +80,7 @@ export default function GovernmentEquityStakesAILabsIPOWindowPage() {
         <p>
           The convergence is strange enough on its own. What makes it a story I have to write this
           weekend is the calendar underneath it. SpaceX prices the largest IPO in history on
-          Wednesday. Anthropic{' '}
+          Thursday. Anthropic{' '}
           <Link href="/originals/anthropic-confidential-s1-ipo" className="text-accent-primary hover:underline">
             confidentially filed its S-1
           </Link>{' '}
@@ -243,7 +243,7 @@ export default function GovernmentEquityStakesAILabsIPOWindowPage() {
         <p>
           SpaceX is the immediate test. Its roadshow finished week one on June 6, the same day
           Trump made his comments, and 30 percent of the float is earmarked for retail through
-          Robinhood, Fidelity, and Schwab. If SPCX prices at target on Wednesday and holds, the
+          Robinhood, Fidelity, and Schwab. If SPCX prices at target on Thursday and holds, the
           market is saying it treats all of this as noise. If pricing comes in soft or the
           allocation gets restructured, the September and October filers will read that as a
           political risk premium with a number attached.
