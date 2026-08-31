@@ -267,6 +267,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verdicts/trust-ai-found-cves`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/verdicts/frontier-premium-worth-it`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/sony-warner-anthropic-music-copyright-s1-clock`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/softbank-openai-stake-serial-loans-collateral-stack`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/nvidia-huggingface-13b-open-weights-distribution-moat`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/cyber-defense-letter-116-signers-containment-math`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
