@@ -251,7 +251,7 @@ export default function GPT56Luna80CutSolInferenceStackPage() {
           >
             price war we wrote up in April
           </Link>
-          , with DeepSeek V3.2 setting the floor at roughly $0.28 input and $1.10 output, Gemini
+          , with DeepSeek V3.2 setting the floor at roughly $0.28 input and $0.42 output, Gemini
           3.6 Flash inside the same neighborhood, and Anthropic&apos;s Haiku tier holding a
           premium against the pack. Luna at $0.20 and $1.20 is now the floor for a closed-API
           frontier lab, undercuts DeepSeek on input, and matches or beats Gemini Flash across
